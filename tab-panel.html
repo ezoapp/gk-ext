@@ -1,0 +1,64 @@
+<script src='tab-panel/js/jquery-ui-1.10.3.custom.min.js'></script>
+
+<element name='tab-panel'>
+
+  <template>
+    <link rel='stylesheet' href='tab-panel/development-bundle/themes/vader/jquery-ui-1.10.3.custom.css'>
+    <link rel='stylesheet' href='tab-panel/css/tab-panel.css'>
+    <div id='{{id}}' class='{{class}}' style='{{style}}' tabPosition='{{tabPosition}}'>
+      <content></content>
+    </div>
+  </template>
+
+  <script>
+  registerElement('tab-panel', {
+
+    init: function() {
+      var self = this,
+        $ele = this.$ele,
+        $content = $ele.children(),
+        $ul = $('<ul></ul>'),
+        tabPosition = $ele.attr('tabPosition'),
+        $spacer, $toolbar;
+      $.each($content, function(idx, div) {
+        if ($(div).hasClass('tabs-spacer')) {
+          $spacer = $(div);
+        } else if ($(div).hasClass('tabs-toolbar')) {
+          $toolbar = $(div).css('float', 'right');
+        } else {
+          $ul.append($('<li><a href="#' + div.id + '">' + div.getAttribute('name') + '</a></li>'));
+        }
+      });
+      if ($spacer) {
+        $ele.prepend($spacer);
+      }
+      if ($toolbar) {
+        $ul.prepend($toolbar);
+      }
+      $ele.prepend($ul);
+      $('#' + this.id).tabs({
+        heightStyle: "fill"
+      });
+      if (tabPosition === 'bottom') {
+        $ele.addClass('tabs-bottom');
+        $(".tabs-bottom .ui-tabs-nav, .tabs-bottom .ui-tabs-nav > *")
+          .removeClass("ui-corner-all ui-corner-top")
+          .addClass("ui-corner-bottom");
+        $(".tabs-bottom .ui-tabs-nav").appendTo(".tabs-bottom");
+      }
+
+      $(window).resize(function(e) {
+        if (e.originalEvent) {
+          self.refresh();
+        }
+      });
+    },
+
+    refresh: function() {
+      $('#' + this.id).tabs('refresh');
+    }
+
+  });
+  </script>
+
+</element>

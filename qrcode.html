@@ -1,0 +1,58 @@
+<script src='../jquery.qrcode/src/jquery.qrcode.js'></script>
+<script src='../jquery.qrcode/src/qrcode.js'></script>
+<script>
+requirejs.config({
+  context: 'gk',
+  shim: {
+    'jquery.qrcode/src/qrcode': {
+      deps: ['jquery.qrcode/src/jquery.qrcode']
+    }
+  }
+});
+</script>
+
+<element name='qrcode'>
+
+  <template>
+    <div id='{{id}}' render='{{render}}' style='{{style}}' w='{{width}}' h='{{height}}'>
+      <content></content>
+    </div>
+  </template>
+
+  <script>
+  registerElement('qrcode', {
+
+    text: '',
+
+    init: function() {
+      var $ele = this.$ele;
+      if ($ele.attr('w') != '{{width}}')
+        $ele.css({
+          'width': $ele.attr('w')
+        });
+      if ($ele.attr('h') != '{{height}}')
+        $ele.css({
+          'height': $ele.attr('h')
+        });
+
+      this.render(this.$originEle.text());
+    },
+
+    render: function(txt) {
+      var $ele = this.$ele;
+      if (this.text !== txt) {
+        this.text = txt;
+        $ele.html('');
+        $ele.qrcode({
+          render: $ele.attr('render'),
+          width: parseInt($ele.css('width'), 10),
+          height: parseInt($ele.css('height'), 10),
+          text: txt
+        });
+      }
+    }
+
+  });
+  </script>
+
+</element>

@@ -1,0 +1,25 @@
+<script src="../bxSlider/jquery.bxslider.min.js"></script>
+
+<element name='bxslider'>
+
+  <template>
+    <link rel="stylesheet" href="../bxSlider/jquery.bxslider.css" />
+    <link rel="stylesheet" href="bxslider/cssreset.css" />
+    <div id='{{id}}' style='{{style}}'>
+      <ul style='{{style}}' captions='{{captions}}' class='bxslider'>
+        <content></content>
+      </ul>
+    </div>
+  </template>
+
+  <script>
+  registerElement('bxslider', {
+
+    init: function() {
+      //this.$ele.find('ul').bxSlider({mode: 'fade',captions: true});
+    }
+
+  });
+  </script>
+
+</element>

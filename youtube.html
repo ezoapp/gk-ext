@@ -1,0 +1,32 @@
+<element name='youtube'>
+
+  <template>
+    <img id='{{id}}' data-gk-src='{{src}}' width='{{width}}' height='{{height}}' videoId='{{videoId}}'>
+    <content></content>
+  </template>
+
+  <script>
+  registerElement('youtube', {
+
+    init: function() {
+      var $ele = this.$ele;
+      var time = $ele.attr('time');
+      var imgSrc = $ele.attr("data-gk-src");
+      if (imgSrc !== "{{src}}") {
+        $ele.attr("src", imgSrc);
+      }
+
+      $ele.on('click', function(e) {
+        if (typeof $ele.attr('preview') === 'undefined') {
+          $ele.replaceWith('<iframe id="{{id}}" type="text/html" ' +
+            'width="' + $ele.width() + '" height="' + $ele.height() + '" ' +
+            'src="http://www.youtube.com/embed/' + $ele.attr('videoId') + '?' +
+            'autoplay=1&loop=1&rel=0&wmode=transparent" frameborder="0"></iframe>');
+        }
+      });
+    }
+
+  });
+  </script>
+
+</element>

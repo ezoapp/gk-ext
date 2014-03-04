@@ -1,0 +1,146 @@
+<script src='../split-pane/split-pane.js'></script>
+
+<element name='split-pane'>
+
+  <template>
+    <link rel='stylesheet' href='../split-pane/split-pane.css'>
+    <link rel='stylesheet' href='split-pane/pretty-split-pane.css'>
+    <div id='{{id}}' class='split-pane vertical-percent' left='{{left}}' right='{{right}}'>
+      <content></content>
+    </div>
+  </template>
+
+  <script>
+  registerElement('split-pane', {
+
+    $lrPanel: '',
+
+    $collapseBtn: '',
+
+    dragAfterLeft: '',
+
+    isCollapsed: true,
+
+    init: function() {
+      var $lrPanel, $collapseBtn, self = this;
+      this.$lrPanel = this.$ele.find('.split-pane-component');
+      this.$collapseBtn = $('<div class="collapseBtn"></div>');
+      this.dragAfterLeft = $(document).width() * 0.6;
+      $lrPanel = this.$lrPanel;
+      $collapseBtn = this.$collapseBtn;
+      var right = this.$ele.attr('right');
+      right = typeof right === 'undefined' ? '25%' : right;
+      var left = this.$ele.attr('left');
+      if (typeof left !== 'undefined' && left.indexOf('px') > 0) {
+        left = left.substr(0, left.length - 2);
+        right = (this.$ele[0].offsetWidth - left) + 'px';
+      }
+      $($lrPanel[0]).css({
+        right: right,
+        'margin-right': '5px'
+      });
+      $($lrPanel[1]).css({
+        width: right
+      });
+      var $divider = $('.split-pane-divider');
+      $divider.css({
+        'right': right,
+        'width': '8px'
+      });
+      $divider.on('mouseover', function() {
+        if (self.isCollapsed) {
+          $collapseBtn.animate(100, function() {
+            $(this).addClass('focus');
+          });
+          $(this).animate({
+            width: 12
+          }, 100);
+        }
+      }).on('mouseleave', function() {
+        if (self.isCollapsed && !$divider.hasClass('drag')) {
+          $(this).animate({
+            width: 8
+          }, 200);
+          setTimeout(function() {
+            $collapseBtn.removeClass('focus');
+          }, 200);
+        }
+      });
+      this.$ele.splitPane();
+      $($lrPanel[1]).width() > 0 ? $collapseBtn.addClass('right') : $collapseBtn.addClass('left');
+      $divider.append($collapseBtn);
+      $divider.mousedown(function() {
+        self.lastClickScrollTimestamp = new Date().getTime();
+        $divider.addClass('drag').width(12);
+        $collapseBtn.addClass('focus');
+        self.left() !== '0%' ? self.isCollapsed = false : self.isCollapsed = true;
+        $(document).one('mouseup', function(event) {
+          var midTime = new Date().getTime() - self.lastClickScrollTimestamp;
+          if (midTime > 300) {
+            if (self.left() !== '0%') {
+              self.isCollapsed = false;
+              this.dragAfterLeft = $(document).width() - $($lrPanel[1]).width();
+              $divider.width(8);
+              $collapseBtn.removeClass('focus');
+            } else {
+              self.isCollapsed = true;
+            }
+          } else {
+            if (!self.isCollapsed) {
+              $divider.width(8);
+              $collapseBtn.removeClass('focus');
+            }
+          }
+          $divider.removeClass('drag');
+          $($lrPanel[1]).width() > 0 ? $collapseBtn.removeClass('left').addClass('right') : $collapseBtn.removeClass('right').addClass('left');
+        });
+      });
+      $collapseBtn.on('mousedown', function(e) {
+        self.lastLeft = self.left();
+        self.lastClickScrollTimestamp = new Date().getTime();
+        $(document).one('mouseup', function(event) {
+          var midTime = new Date().getTime() - self.lastClickScrollTimestamp;
+          if (midTime <= 200 && self.lastLeft === self.left()) {
+            self.left() === '0%' ? self.collapse(false) : self.collapse(true);
+          }
+        });
+      });
+    },
+
+    left: function(width) {
+      if (typeof width !== 'undefined' && width.indexOf('px') > 0) {
+        width = width.substr(0, width.length - 2);
+        right = (this.$ele[0].offsetWidth - width) + 'px';
+        var lrPanel = this.$ele.find('.split-pane-component');
+        $(lrPanel[0]).css({
+          right: right,
+          'margin-right': '5px'
+        });
+        $(lrPanel[1]).css({
+          width: right
+        });
+        $('.split-pane-divider').css({
+          'right': right,
+          'width': '8px'
+        });
+        this.$ele.splitPane();
+      } else {
+        return $('.split-pane-divider')[0].style.right;
+      }
+    },
+
+    collapse: function(isCollapsed) {
+      if (isCollapsed) {
+        this.isCollapsed = true;
+        this.left($(document).width() + 'px');
+      } else {
+        this.isCollapsed = false;
+        this.left(this.dragAfterLeft + 'px');
+      }
+      $(this.$lrPanel[1]).width() > 0 ? this.$collapseBtn.removeClass('left').addClass('right') : this.$collapseBtn.removeClass('right').addClass('left');
+    }
+
+  });
+  </script>
+
+</element>

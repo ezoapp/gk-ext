@@ -1,0 +1,32 @@
+{
+  "name": "gk-ext",
+  "version": "0.0.1",
+  "authors": [
+    "EZoUI <ezoservice@icsc.com.tw>"
+  ],
+  "main": "all.html",
+  "keywords": [
+    "gk",
+    "web-components"
+  ],
+  "license": "MIT",
+  "homepage": "http://www.ezoui.com/",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "split-pane": "https://github.com/shagstrom/split-pane.git#master",
+    "bxSlider": "master",
+    "flippant": "https://github.com/mintchaos/flippant.js.git#master",
+    "raty": "master",
+    "jquery.qrcode": "master"
+  },
+  "devDependencies": {
+    "gk-loader": "../gk-loader"
+  }
+}

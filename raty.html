@@ -1,0 +1,35 @@
+<script src='../raty/lib/jquery.raty.js'></script>
+
+<element name='raty'>
+
+  <template>
+    <div id='{{id}}' score='{{score}}'>
+      <content></content>
+    </div>
+  </template>
+
+  <script>
+  registerElement('raty', {
+
+    init: function() {
+      var baseURL = require.toUrl('./');
+      this.$ele.raty({
+        starOff: baseURL + '../raty/lib/images/star-off.png',
+        starOn: baseURL + '../raty/lib/images/star-on.png'
+      });
+      if (typeof this.$ele.attr('score') !== 'undefined') {
+        $(this.$ele).raty('score', this.$ele.attr('score'));
+      }
+    },
+
+    score: function(n) {
+      if (typeof n != 'undefined') {
+        $(this.$ele).raty('score', n);
+      }
+      return $(this.$ele).raty('score');
+    }
+
+  });
+  </script>
+
+</element>

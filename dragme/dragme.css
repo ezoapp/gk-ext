@@ -1,0 +1,22 @@
+.dragme-frame {
+    position: absolute;
+    left: 0;
+    top: 0; /* set these so Chrome doesn't return 'auto' from getComputedStyle */
+    z-index: 9;
+}
+
+.dragme-title {
+    cursor: move;
+    height: 28px;
+    font-size: 18px;
+    /*border: 2px ridge #000000;*/
+    background-color: #3c3c3c;
+    color: #ddf0f8;
+    /*font-size: 16px;*/
+    /*font-weight: bold;*/
+    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    line-height: 28px;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+}

@@ -1,0 +1,97 @@
+<element name='movable'>
+
+  <template>
+    <link rel='stylesheet' href='movable/movable.css'>
+    <div id='{{id}}' reserveWidth='{{reserveWidth}}' style='position:relative;{{style}}'>
+      <div class='movable-title'>{{heading}}</div>
+      <span class='glyphicon glyphicon-remove hidden' style='position:absolute; right:0; top;0; font-size: 16px; color:white;cursor:pointer;'></span>
+      <content></content>
+    </div>
+  </template>
+
+  <script>
+  registerElement('movable', {
+
+    init: function() {
+      var self = this;
+      self.movable = false;
+      var $title = self.$ele.find('.movable-title');
+      var $frame = self.$ele;
+      var $removebtn = $frame.children(".glyphicon-remove");
+      var reserveWidth = self.$originEle.attr("reserveWidth") || 0;
+
+      if (self.$originEle.attr('removebtn') === "true") {
+        $removebtn.removeClass("hidden");
+      }
+      $title.on('click', function(evt) {
+        evt.preventDefault();
+        evt.stopPropagation();
+      });
+      $title.on('mousedown', function(evt) {
+        self.movable = true;
+        evt.preventDefault();
+        evt.stopPropagation();
+        var pointX = evt.clientX,
+          pointY = evt.clientY,
+          top = $frame.css('top'),
+          left = $frame.css('left'),
+          titleWidth = $title.width(),
+          titleHeight = $title.height(),
+          maxTop = $frame.parent().height() - titleHeight,
+          maxLeft = $frame.parent().width() - reserveWidth, // 移到最右邊時，保留的寬度，此時的 title left 值
+          minLeft = reserveWidth - titleWidth, // 移到最左邊時，保留的寬度，此時的 title left 值
+          minTop = 42; // TODO temporally fixed
+
+        maxTop = maxTop < minTop ? minTop : maxTop;
+        maxLeft <= minLeft && (maxLeft = minLeft = left);
+        top = parseInt(top.substring(0, top.length - 2));
+        left = parseInt(left.substring(0, left.length - 2));
+        var moveXY = function(evt, data) {
+          if (self.movable) {
+            var clientX = evt.clientX || data.clientX,
+              clientY = evt.clientY || data.clientY,
+              x = pointX - clientX,
+              y = pointY - clientY,
+              setTop = (top - y),
+              setLeft = (left - x);
+
+            setTop = setTop < minTop ? minTop : setTop;
+            setTop = setTop > maxTop ? maxTop : setTop;
+            setLeft = setLeft > maxLeft ? maxLeft : setLeft;
+            setLeft = setLeft < minLeft ? minLeft : setLeft;
+            $frame.css({
+              'top': setTop + "px",
+              'left': setLeft + "px"
+            });
+          }
+        };
+        $frame.parent().on('panelmove', moveXY);
+        $frame.on('mouseup', function(evt) {
+          if (self.movable) {
+            $frame.parent().off('panelmove', moveXY);
+            self.movable = false;
+          }
+        });
+      });
+      $removebtn.on("click", function remove() {
+        self.hide();
+        return false;
+      });
+    },
+
+    hide: function() {
+      this.$ele.hide();
+    },
+
+    show: function() {
+      this.$ele.show();
+    },
+
+    isHide: function() {
+      return this.$ele.css('display') === 'none';
+    }
+
+  });
+  </script>
+
+</element>

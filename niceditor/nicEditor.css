@@ -1,0 +1,24 @@
+.gk-component-niceditor.nicEdit-main ol {
+    list-style: inside;
+    list-style-type: decimal;
+}
+
+.gk-component-niceditor.nicEdit-main ul {
+    list-style: inside;
+    list-style-type: disc;
+}
+
+.nicEdit-pane {
+    background-color: #fff;
+    color: #000000;
+    text-shadow: none;
+}
+
+.gk-component-niceditor {
+    background-color: #fff;
+    text-shadow: none;
+    color: #000000;
+    padding: 0;
+    visibility: hidden;
+}
+

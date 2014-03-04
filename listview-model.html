@@ -1,0 +1,37 @@
+<element name='listview-model'>
+
+  <template>
+    <div id='{{id}}'>
+      <content></content>
+    </div>
+  </template>
+
+  <script>
+  registerElement('listview-model', {
+
+    contentHTML: '',
+
+    init: function() {
+      this.contentHTML = this.$ele.html().trim();
+    },
+
+    apply: function(info) {
+      var html = this.contentHTML;
+      for (var property in info) {
+        if (info.hasOwnProperty(property)) {
+          var regex = new RegExp('\\${' + property + '}', "gi");
+          html = html.replace(regex, info[property]);
+        }
+      }
+      var $html = $(html);
+      $html.find('[data-readonly=Y]').each(function(idx, node) {
+        $(node).replaceWith($(node).html());
+      });
+      this.$ele.html($html.clone().wrap("<div></div>").parent().html().trim());
+      this.$ele.find('[data-role=listview]').listview();
+    }
+
+  });
+  </script>
+
+</element>

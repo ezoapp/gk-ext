@@ -1,0 +1,52 @@
+<script src='niceditor/nicEdit.js'></script>
+
+<element name='niceditor'>
+
+  <template>
+    <link rel='stylesheet' href='niceditor/nicEditor.css'>
+    <div id='{{id}}' width='{{width}}' height='{{height}}' style='{{style}}'>
+      <textarea id='{{id}}_niceditor' name='{{id}}_name' style='width: 100%;height: 100%'></textarea>
+    </div>
+  </template>
+
+  <script>
+  registerElement('niceditor', {
+
+    editor: '',
+
+    init: function() {
+      var nicId = this.id + '_niceditor',
+        $ele = this.$ele,
+        attrs = {
+          width: $ele.attr('width') ? $ele.attr('width') : "100%",
+          height: $ele.attr('height') ? $ele.attr('height') : "100%"
+        };
+      $ele.css('width', attrs.width);
+      $ele.css('height', attrs.height);
+
+      new nicEditor({
+        fullPanel: true,
+        ////            buttonList: ['ol', 'indent', 'outdent']
+        iconsPath: require.toUrl('./niceditor/nicEditorIcons.gif')
+      }).panelInstance(nicId);
+
+      this.editor = nicEditors.findEditor(nicId);
+      $ele.css("visibility", "visible");
+    },
+
+    setContent: function(value) {
+      this.editor.setContent(value);
+    },
+
+    getContent: function() {
+      return this.editor.getContent();
+    },
+
+    editable: function(editable) {
+      editable ? this.editor.elm.setAttribute('contentEditable', 'true') : this.editor.disable();
+    }
+
+  });
+  </script>
+
+</element>

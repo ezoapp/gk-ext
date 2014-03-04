@@ -1,0 +1,37 @@
+<script src='../flippant/flippant.min.js' var='flippant'></script>
+
+<element name='flippant'>
+
+  <template>
+    <link rel='stylesheet' href='../flippant/flippant.css' />
+    <div id='{{id}}' style='{{style}}'>
+      <content></content>
+    </div>
+  </template>
+
+  <script>
+  var self;
+
+  registerElement('flippant', {
+
+    init: function() {
+      self = this;
+      this.front = this.$ele;
+      this.backHTML = this.$ele.find('.back');
+      this.backHTML.remove();
+      this.isBack = false;
+    },
+
+    flip: function() {
+      if (!this.isBack) {
+        this.back = flippant.flip(this.front[0], this.backHTML.html());
+      } else {
+        this.back = this.back.close();
+      }
+      return this.isBack = !this.isBack;
+    }
+
+  });
+  </script>
+
+</element>

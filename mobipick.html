@@ -1,0 +1,72 @@
+<script src='mobipick/mobipick.js'></script>
+<script>
+requirejs.config({
+  context: 'gk',
+  shim: {
+    'gk-ext/mobipick/mobipick': {
+      deps: ['gk-ext/mobipick/xdate.i18n']
+    },
+    'gk-ext/mobipick/xdate.i18n': {
+      deps: ['gk-ext/mobipick/xdate']
+    },
+    'gk-ext/mobipick/xdate': {
+      deps: ['gk-ext/mobipick/modernizr.custom.min']
+    }
+  }
+});
+</script>
+
+<element name='mobipick'>
+
+  <template>
+    <link rel='stylesheet' href='mobipick/css/mobipick.css'>
+    <div id='{{id}}' style='{{style}}' accuracy='{{accuracy}}' dateFormat='{{dateFormat}}' dateFormatMonth='{{dateFormatMonth}}' intlStdDate='{{intlStdDate}}' locale='{{locale}}'>
+      <input type='text' min='{{min}}' max='{{max}}' value='{{value}}' />
+    </div>
+  </template>
+
+  <script>
+  function mobiInit($ele, $input, style) {
+    $input.mobipick({
+      accuracy: $ele.attr('accuracy'),
+      dateFormat: $ele.attr('dateFormat'),
+      dateFormatMonth: $ele.attr('dateFormatMonth'),
+      intlStdDate: !('false' == $ele.attr('intlStdDate')),
+      locale: $ele.attr('locale')
+    });
+    !style || $input.parent().attr('style', style);
+  }
+
+  registerElement('mobipick', {
+
+    init: function() {
+      var $ele = this.$ele,
+        $input = $ele.find('input'),
+        style = this.$originEle.attr('style');
+      !style || $ele.removeAttr('style');
+      $(document).one('pagecreate.mobipick', mobiInit($ele, $input, style));
+    },
+
+    value: function(val) {
+      var $input = this.$ele.find('input');
+      if (val !== undefined) {
+        return $input.mobipick("option", "date", val).mobipick("updateDateInput");
+      } else {
+        return $input.val();
+      }
+    },
+
+    getDateValue: function() {
+      var $input = this.$ele.find('input');
+      return $input.mobipick("option", "date");
+    },
+
+    reset: function() {
+      var $input = this.$ele.find('input');
+      $input.mobipick("option", "date", null).mobipick("updateDateInput");
+    }
+
+  });
+  </script>
+
+</element>

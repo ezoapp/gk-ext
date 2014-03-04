@@ -1,0 +1,95 @@
+<script src='js/utils.js' var='utils'></script>
+
+<element name='json-listview'>
+
+  <template>
+    <ul id='{{id}}' data-role='listview' repeat='{{repeat}}' style='{{style}}' data-gk-click='{{onclick}}' data-autodividers='{{data-autodividers}}' data-divider-theme='{{data-divider-theme}}' data-filter-reveal='{{data-filter-reveal}}' data-filter='{{data-filter}}' data-filter-placeholder='{{data-filter-placeholder}}' data-filter-theme='{{data-filter-theme}}' data-icon='{{data-icon}}' data-inset='{{data-inset}}' data-split-icon='{{data-split-icon}}' data-split-theme='{{data-split-theme}}' data-theme='{{data-theme}}' data-count-theme='{{data-count-theme}}'>
+      <content></content>
+    </ul>
+  </template>
+
+  <script>
+  registerElement('json-listview', {
+
+    init: function() {
+      this.html = this.$ele.html().trim();
+      if (typeof String.prototype.trim !== 'function') {
+        String.prototype.trim = function() {
+          return this.replace(/^\s+|\s+$/g, '');
+        }
+      }
+      var $newEle = utils.replaceGKTagName(this.$originEle[0].tagName, this.$ele),
+        attributes = this.$originEle.prop("attributes");
+      $.each(attributes, function() {
+        $newEle.attr(this.name, this.value);
+      });
+      $newEle.data('_gk_', this);
+      this.$ele.replaceWith($newEle[0]);
+      this.$ele = $newEle;
+
+      //        if (typeof this.$ele.attr('repeat') !== 'undefined') {
+      //          this.$ele.html('');
+      //        }
+      this.templateHTML = this.$originEle.html();
+      this.arrayModelName = this.$ele.attr('repeat');
+      this.$ele.on('click', this.onclick);
+      this.onClickCallback = function() {};
+    },
+
+    refresh: function() {
+      this.$ele.listview('refresh');
+    },
+
+    onclick: function(e) {
+      var src = $(e.originalEvent.srcElement);
+      if (typeof this.onClickCallback !== null) {
+        this.onClickCallback(src.closest('li'));
+      }
+    },
+
+    onRow: function(callback) {
+      this.onClickCallback = callback;
+    },
+
+    model: function(model) {
+      var self = this;
+      self.$ele.listview({
+        autodividersSelector: function(li) {
+          return self.$ele.attr('autodividers') === 'undefined' ?
+            null : li.attr('divider');
+        }
+      });
+      var iterator = typeof self.arrayModelName == 'undefined' ?
+        model : model[self.arrayModelName];
+      self.$ele.html('');
+      $(iterator).each(function(idx, obj) {
+        var newOne = self.templateHTML;
+        for (var key in obj) {
+          var regex = new RegExp('{{' + key + '}}', "g");
+          newOne = newOne.replace(regex, obj[key]);
+        }
+        self.$ele.append(newOne);
+      });
+      this.$ele.listview('refresh');
+    },
+
+    apply: function(info) {
+      var html = this.html;
+      for (var property in info) {
+        if (info.hasOwnProperty(property)) {
+          var regex = new RegExp('\\${' + property + '}', "gi");
+          html = html.replace(regex, info[property]);
+        }
+      }
+      var $html = $('<div>' + html + '</div>');
+      $html.find('[data-readonly=Y]').each(function(idx, node) {
+        $(node).replaceWith($(node).html());
+      });
+      this.$ele.html($html.html());
+      this.$ele.listview("refresh", true);
+    }
+
+  });
+  </script>
+
+</element>

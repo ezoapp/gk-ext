@@ -1,0 +1,59 @@
+<script src='js/utils.js' var='utils'></script>
+
+<element name='imggallery'>
+
+  <template>
+    <ul id='{{id}}' style='{{style}}' data-gk-click='{{onclick}}'>
+      <content></content>
+    </ul>
+  </template>
+
+  <script>
+  registerElement('imggallery', {
+
+    init: function() {
+      this.html = this.$ele.html().trim();
+      if (typeof String.prototype.trim !== 'function') {
+        String.prototype.trim = function() {
+          return this.replace(/^\s+|\s+$/g, '');
+        }
+      }
+      var $newEle = utils.replaceGKTagName(this.$originEle[0].tagName, this.$ele),
+        attributes = this.$originEle.prop("attributes");
+      $.each(attributes, function() {
+        $newEle.attr(this.name, this.value);
+      });
+      $newEle.data('_gk_', this);
+      this.$ele.replaceWith($newEle[0]);
+      this.$ele = $newEle;
+      this.templateHTML = this.$originEle.html();
+    },
+
+    onclick: function(callback) {
+      this.$ele.on('click', callback);
+    },
+
+    model: function(model) {
+      var iterator = typeof this.arrayModelName == 'undefined' ?
+        model : model[this.arrayModelName],
+        self = this;
+      this.$ele.html('');
+      $(iterator).each(function(idx, obj) {
+        var newOne = self.templateHTML;
+        for (var key in obj) {
+          var regex = new RegExp('{{' + key + '}}', "g");
+          newOne = newOne.replace(regex, obj[key]);
+
+          if ('data-src' === key) {
+            var srcRegex = new RegExp(key, "g");
+            newOne = newOne.replace(srcRegex, 'src');
+          }
+        }
+        self.$ele.append(newOne);
+      });
+    }
+
+  });
+  </script>
+
+</element>

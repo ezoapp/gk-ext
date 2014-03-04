@@ -1,0 +1,15 @@
+.movable-title {
+    cursor: move;
+    height: 28px;
+    font-size: 18px;
+    background-color: #333;
+    color: #ddf0f8;
+    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    line-height: 28px;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    cursor: move;
+}
