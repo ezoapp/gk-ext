@@ -10,8 +10,10 @@
   </template>
 
   <script>
-  window.gmapReady = function() {
-    $(document).triggerHandler('gmapReady');
+  window.gmapReady = {
+    js: function() {
+      $(document).triggerHandler('gmapReady');
+    }
   };
 
   registerElement('gmap', {
