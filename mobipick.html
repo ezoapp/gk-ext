@@ -3,7 +3,7 @@
 requirejs.config({
   context: 'gk',
   shim: {
-    'gk-ext/mobipick/mobipick': {
+    '/bower_components/gk-ext/mobipick/mobipick': {
       deps: ['gk-ext/mobipick/xdate.i18n']
     },
     'gk-ext/mobipick/xdate.i18n': {
@@ -26,7 +26,10 @@ requirejs.config({
   </template>
 
   <script>
-  function mobiInit($ele, $input, style) {
+  function mobiInit(obj) {
+    var $ele = obj.$ele,
+      style = obj.$originEle.attr('style'),
+      $input = obj.$ele.find('input');
     $input.mobipick({
       accuracy: $ele.attr('accuracy'),
       dateFormat: $ele.attr('dateFormat'),
@@ -35,35 +38,38 @@ requirejs.config({
       locale: $ele.attr('locale')
     });
     !style || $input.parent().attr('style', style);
+    obj.$input = $input;
   }
 
   registerElement('mobipick', {
 
+    $input: '',
+
     init: function() {
       var $ele = this.$ele,
-        $input = $ele.find('input'),
         style = this.$originEle.attr('style');
       !style || $ele.removeAttr('style');
-      $(document).one('pagecreate.mobipick', mobiInit($ele, $input, style));
+      $(document).one('pagecreate.mobipick', mobiInit(this));
     },
 
     value: function(val) {
-      var $input = this.$ele.find('input');
-      if (val !== undefined) {
-        return $input.mobipick("option", "date", val).mobipick("updateDateInput");
+      if (this.$input) {
+        if (val !== undefined) {
+          return this.$input.mobipick("option", "date", val).mobipick("updateDateInput");
+        } else {
+          return this.$input.val();
+        }
       } else {
-        return $input.val();
+        return null;
       }
     },
 
     getDateValue: function() {
-      var $input = this.$ele.find('input');
-      return $input.mobipick("option", "date");
+      return this.$input ? this.$input.mobipick("option", "date") : null;
     },
 
     reset: function() {
-      var $input = this.$ele.find('input');
-      $input.mobipick("option", "date", null).mobipick("updateDateInput");
+      this.$input && this.$input.mobipick("option", "date", null).mobipick("updateDateInput");
     }
 
   });
