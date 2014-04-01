@@ -1,15 +1,23 @@
 .movable-title {
-    cursor: move;
-    height: 28px;
-    font-size: 18px;
-    background-color: #333;
-    color: #ddf0f8;
-    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.3);
-    text-align: center;
-    line-height: 28px;
-    border-top-left-radius: 5px;
-    border-top-right-radius: 5px;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    cursor: move;
+  cursor: move;
+  height: 36px;
+  font-size: 14px;
+  background-color: #262626;
+  color: #aaa;
+  /*text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.3);*/
+  text-align: left;
+  line-height: 36px;
+  border-top-left-radius: 3px;
+  border-top-right-radius: 3px;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  cursor: move;
+}
+.movable-title::before {
+  content:'property : ';
+  color:#aaa;
+  background:url(property-property.png) left 4px no-repeat;
+  opacity:1;
+  padding-left:18px;
+  margin-left:10px;
 }
