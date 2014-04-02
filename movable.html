@@ -18,7 +18,9 @@
       var $title = self.$ele.find('.movable-title');
       var $frame = self.$ele;
       var $removebtn = $frame.children(".glyphicon-remove");
-      var reserveWidth = self.$originEle.attr("reserveWidth") || 0;
+      var reserveWidth = parseInt(self.$originEle.attr("reserveWidth") || gkConfig.movableMargin, 10);
+      var contentPaddingTop = $('#navbar .navbar-collapse').height();
+      var contentPaddingBottom = $('#pagePanel_pagesHeader').height();
 
       if (self.$originEle.attr('removebtn') === "true") {
         $removebtn.removeClass("hidden");
@@ -35,17 +37,15 @@
           pointY = evt.clientY,
           top = $frame.css('top'),
           left = $frame.css('left'),
-          titleWidth = $title.width(),
-          titleHeight = $title.height(),
-          maxTop = $frame.parent().height() - titleHeight,
-          maxLeft = $frame.parent().width() - reserveWidth, // 移到最右邊時，保留的寬度，此時的 title left 值
-          minLeft = reserveWidth - titleWidth, // 移到最左邊時，保留的寬度，此時的 title left 值
-          minTop = 42; // TODO temporally fixed
+          minTop = contentPaddingTop,
+          maxTop = $frame.parent().height() - $title.outerHeight() - contentPaddingBottom,
+          minLeft = -1 * $title.outerWidth() + reserveWidth, // 移到最左邊時，保留的寬度，此時的 title left 值
+          maxLeft = $frame.parent().width() - reserveWidth; // 移到最右邊時，保留的寬度，此時的 title left 值
 
         maxTop = maxTop < minTop ? minTop : maxTop;
         maxLeft <= minLeft && (maxLeft = minLeft = left);
-        top = parseInt(top.substring(0, top.length - 2));
-        left = parseInt(left.substring(0, left.length - 2));
+        top = parseInt(top, 10);
+        left = parseInt(left, 10);
         var moveXY = function(evt, data) {
           if (self.movable) {
             var clientX = evt.clientX || data.clientX,
