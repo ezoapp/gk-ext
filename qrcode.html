@@ -1,11 +1,11 @@
-<script src='../jquery.qrcode/src/jquery.qrcode.js'></script>
 <script src='../jquery.qrcode/src/qrcode.js'></script>
+<script src='../jquery.qrcode/src/jquery.qrcode.js'></script>
 <script>
 requirejs.config({
   context: 'gk',
   shim: {
-    'components/jquery.qrcode/src/qrcode': {
-      deps: ['components/jquery.qrcode/src/jquery.qrcode']
+    'components/jquery.qrcode/src/jquery.qrcode': {
+      deps: ['components/jquery.qrcode/src/qrcode']
     }
   }
 });
@@ -14,7 +14,7 @@ requirejs.config({
 <element name='qrcode'>
 
   <template>
-    <div id='{{id}}' render='{{render}}' style='{{style}}' w='{{width}}' h='{{height}}'>
+    <div id='{{id}}' render='{{render}}' style='{{style}}' size='{{size}}'>
       <content></content>
     </div>
   </template>
@@ -26,15 +26,13 @@ requirejs.config({
 
     init: function() {
       var $ele = this.$ele;
-      if ($ele.attr('w') != '{{width}}')
+      if ($ele.attr('size') != '{{size}}') {
+        var size = $ele.attr('size');
         $ele.css({
-          'width': $ele.attr('w')
+          'width': size,
+          'height': size
         });
-      if ($ele.attr('h') != '{{height}}')
-        $ele.css({
-          'height': $ele.attr('h')
-        });
-
+      }
       this.render(this.$originEle.text());
     },
 
@@ -45,8 +43,8 @@ requirejs.config({
         $ele.html('');
         $ele.qrcode({
           render: $ele.attr('render'),
-          width: parseInt($ele.css('width'), 10),
-          height: parseInt($ele.css('height'), 10),
+          background: '#fff',
+          size: parseInt($ele.attr('size'), 10),
           text: txt
         });
       }
