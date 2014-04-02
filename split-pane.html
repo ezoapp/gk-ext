@@ -19,29 +19,34 @@
 
     dragAfterLeft: '',
 
-    isCollapsed: true,
+    isCollapsed: false,
 
     init: function() {
-      var $lrPanel, $collapseBtn, self = this;
-      this.$lrPanel = this.$ele.find('.split-pane-component');
-      this.$collapseBtn = $('<div class="collapseBtn"></div>');
-      this.dragAfterLeft = $(document).width() * 0.6;
-      $lrPanel = this.$lrPanel;
-      $collapseBtn = this.$collapseBtn;
-      var right = this.$ele.attr('right');
+      var $lrPanel = this.$ele.find('.split-pane-component'),
+        $collapseBtn = $('<div class="collapseBtn"></div>'),
+        self = this,
+        right = this.$ele.attr('right'),
+        left = this.$ele.attr('left'),
+        $lrPanel_0 = $lrPanel.eq(0),
+        $lrPanel_1 = $lrPanel.eq(1);
+      this.$lrPanel = $lrPanel;
+      this.$collapseBtn = $collapseBtn;
       right = typeof right === 'undefined' ? '25%' : right;
-      var left = this.$ele.attr('left');
       if (typeof left !== 'undefined' && left.indexOf('px') > 0) {
         left = left.substr(0, left.length - 2);
         right = (this.$ele[0].offsetWidth - left) + 'px';
       }
-      $($lrPanel[0]).css({
+      $lrPanel_0.css({
         right: right,
         'margin-right': '5px'
       });
-      $($lrPanel[1]).css({
+      $lrPanel_1.css({
         width: right
       });
+      this.dragAfterLeft = $(document).width() - $lrPanel_1.width();
+      if ($lrPanel_1.width() === 0) {
+        self.isCollapsed = true;
+      }
       var $divider = $('.split-pane-divider');
       $divider.css({
         'right': right,
@@ -67,8 +72,10 @@
         }
       });
       this.$ele.splitPane();
-      $($lrPanel[1]).width() > 0 ? $collapseBtn.addClass('right') : $collapseBtn.addClass('left');
+      $lrPanel_1.width() > 0 ? $collapseBtn.addClass('right') : $collapseBtn.addClass('left');
       $divider.append($collapseBtn);
+
+      // sink event
       $divider.mousedown(function() {
         self.lastClickScrollTimestamp = new Date().getTime();
         $divider.addClass('drag').width(12);
