@@ -100,6 +100,7 @@
           }
           $divider.removeClass('drag');
           $($lrPanel[1]).width() > 0 ? $collapseBtn.removeClass('left').addClass('right') : $collapseBtn.removeClass('right').addClass('left');
+          GKPageCtrl.checkPagesContentMargin();
         });
       });
       $collapseBtn.on('mousedown', function(e) {
@@ -110,6 +111,7 @@
           if (midTime <= 200 && self.lastLeft === self.left()) {
             self.left() === '0%' ? self.collapse(false) : self.collapse(true);
           }
+          GKPageCtrl.checkPagesContentMargin();
         });
       });
     },
