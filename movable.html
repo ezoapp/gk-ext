@@ -12,9 +12,11 @@
   <script>
   registerElement('movable', {
 
+    $window: '',
+
     init: function() {
+      this.$window = $(window);
       var self = this;
-      self.movable = false;
       var $title = self.$ele.find('.movable-title');
       var $frame = self.$ele;
       var $removebtn = $frame.children(".glyphicon-remove");
@@ -30,7 +32,6 @@
         evt.stopPropagation();
       });
       $title.on('mousedown', function(evt) {
-        self.movable = true;
         evt.preventDefault();
         evt.stopPropagation();
         var pointX = evt.clientX,
@@ -46,33 +47,34 @@
         maxLeft <= minLeft && (maxLeft = minLeft = left);
         top = parseInt(top, 10);
         left = parseInt(left, 10);
-        var moveXY = function(evt, data) {
-          if (self.movable) {
-            var clientX = evt.clientX || data.clientX,
-              clientY = evt.clientY || data.clientY,
-              x = pointX - clientX,
-              y = pointY - clientY,
-              setTop = (top - y),
-              setLeft = (left - x);
+        self.$window.on("mousemove", moveXY);
+        self.$window.one("mouseup", moveEnd);
 
-            setTop = setTop < minTop ? minTop : setTop;
-            setTop = setTop > maxTop ? maxTop : setTop;
-            setLeft = setLeft > maxLeft ? maxLeft : setLeft;
-            setLeft = setLeft < minLeft ? minLeft : setLeft;
-            $frame.css({
-              'top': setTop + "px",
-              'left': setLeft + "px"
-            });
-          }
-        };
-        $frame.parent().on('panelmove', moveXY);
-        $frame.on('mouseup', function(evt) {
-          if (self.movable) {
-            $frame.parent().off('panelmove', moveXY);
-            self.movable = false;
-          }
-        });
+        function moveXY(evt) {
+          evt.preventDefault();
+          evt.stopPropagation();
+          var clientX = evt.clientX,
+            clientY = evt.clientY,
+            x = pointX - clientX,
+            y = pointY - clientY,
+            setTop = (top - y),
+            setLeft = (left - x);
+
+          setTop = setTop < minTop ? minTop : setTop;
+          setTop = setTop > maxTop ? maxTop : setTop;
+          setLeft = setLeft > maxLeft ? maxLeft : setLeft;
+          setLeft = setLeft < minLeft ? minLeft : setLeft;
+          $frame.css({
+            'top': setTop + "px",
+            'left': setLeft + "px"
+          });
+        }
+
+        function moveEnd(evt) {
+          self.$window.off("mousemove", moveXY);
+        }
       });
+
       $removebtn.on("click", function remove() {
         self.hide();
         return false;
