@@ -1,6 +1,5 @@
 {
   "name": "gk-ext",
-  "version": "0.0.1",
   "authors": [
     "EZoUI <ezoservice@icsc.com.tw>"
   ],
@@ -11,7 +10,6 @@
   ],
   "license": "MIT",
   "homepage": "http://www.ezoui.com/",
-  "private": true,
   "dependencies": {
     "split-pane": "https://github.com/shagstrom/split-pane.git#master",
     "bxSlider": "master",
@@ -20,6 +18,6 @@
     "jquery.qrcode": "master"
   },
   "devDependencies": {
-    "gk-loader": "../gk-loader"
+    "gk-loader": "master"
   }
 }
