@@ -15,7 +15,10 @@
     "bxSlider": "master",
     "flippant": "https://github.com/mintchaos/flippant.js.git#master",
     "raty": "master",
-    "jquery.qrcode": "master"
+    "jquery.qrcode": "master",
+    "swiper": "master",
+    "iscroll": "4.2",
+    "jquery.mobile.iscrollview": "https://github.com/watusi/jquery-mobile-iscrollview.git#master"
   },
   "devDependencies": {
     "gk-loader": "master"

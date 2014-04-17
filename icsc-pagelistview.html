@@ -1,0 +1,213 @@
+<script path='jquerymobile.iscrollview'></script>
+<script>
+  requirejs.config({
+    context:'gk',
+    paths: {
+      'iscroll': 'components/iscroll/src/iscroll',
+      'jquerymobile.iscrollview': 'components/jquery.mobile.iscrollview/lib/jquery.mobile.iscrollview'
+    },
+    shim: {
+      'jquerymobile.iscrollview': {
+        deps: ['iscroll']
+      }
+    }
+  });
+</script>
+
+<element name="icsc-pagelistview">
+
+  <template>
+    <link rel="stylesheet" href="../jquery.mobile.iscrollview/lib/jquery.mobile.iscrollview.css">
+    <link rel="stylesheet" href="../jquery.mobile.iscrollview/lib/jquery.mobile.iscrollview-pull.css">
+    <link rel="stylesheet" href="./icsc-pagelistview/icsc-pagelistview.css">
+    <div id="{{id}}" data-scroll>
+      <div class="iscroll-pulldown">
+        <span class="iscroll-pull-icon"></span>
+        <span class="iscroll-pull-label" data-iscroll-loading-text="{{pullDownLoadingText}}" data-iscroll-pulled-text="{{pullDownText}}"></span>
+      </div>
+      <content></content>
+      <div class="iscroll-pullup">
+        <span class="iscroll-pull-icon"></span>
+        <span class="iscroll-pull-label" data-iscroll-loading-text="{{pullUploadingText}}" data-iscroll-pulled-text="{{pullUpText}}"></span>
+      </div>
+    </div>
+  </template>
+
+  <script>
+    function pageviewlist(instance) {
+      var self = instance,
+              $oriEle = self.$originEle,
+              $ele = self.$ele,
+              pageSize = $oriEle.attr('pageSize') ? +$oriEle.attr('pageSize') : 10,
+              pullDownResetText = $oriEle.attr('pullDownResetText'),
+              pullUpResetText = $oriEle.attr('pullUpResetText'),
+              url = $oriEle.attr('url'),
+              id = $oriEle.attr('id');
+
+      var remoteId = id + '.pagebar',
+              offset = 0,
+              options,
+              totalSize,
+              list;
+
+      self.init = function () {
+        if (pullDownResetText) {
+          $('.iscroll-pulldown > .iscroll-pull-label', $ele).html(pullDownResetText);
+        }
+
+        if (pullUpResetText) {
+          $('.iscroll-pullup > .iscroll-pull-label', $ele).html(pullUpResetText);
+        }
+
+        $ele.on('iscroll_onpulldown', function () {
+          if (url) {
+            _init();
+          } else {
+            $ele.gk('refresh');
+          }
+        });
+
+        $ele.on('iscroll_onpullup', function () {
+          _onPullUp();
+        });
+
+        $ele.iscrollview();
+        $('.iscroll-content > :first', $ele).css('margin', '0px');
+        $ele.parent().css('padding', '0px');
+//        self.empty();
+
+        $ele.parents('[data-role=page]').first().one('pageshow', function () {
+          self.resizeWrapper();
+        });
+      };
+
+      self.pageSize = function (size) {
+        if (size) {
+          pageSize = size;
+        } else {
+          return pageSize;
+        }
+      };
+
+      self.onRow = function (callback) {
+        self.$listview().onRow(callback);
+      };
+
+      self.remote = function (newUrl, newOptions, callback) {
+        url = newUrl;
+        options = newOptions;
+        _init(callback);
+      };
+
+      self.refresh = function () {
+        $ele.data('mobileIscrollview').refresh();
+      };
+
+      self.resizeWrapper = function () {
+        $ele.iscrollview('resizeWrapper');
+      };
+
+      self.destroy = function () {
+        if ($ele.data('mobileIscrollview')) {
+          $ele.data('mobileIscrollview').destroy();
+        }
+      };
+
+      self.model = function (model) {
+        self.$listview().model(model);
+      };
+
+      self.empty = function () {
+        $('[data-role=listview]', self.$ele).empty();
+      };
+
+      self.$listview = function () {
+        if (!self.listview) {
+          self.listview = $('[data-role=listview]', self.$ele).gk();
+        }
+        return self.listview;
+      };
+
+      function _init(callback) {
+        !!callback || (callback = $.noop);
+        offset = 0;
+        _getListFromRemote(function (info, textStatus, jqXHR) {
+          list = info.i[id].data;
+          totalSize = info.i[id].totalSize;
+          if (totalSize === 0 && !info.i.msg) {
+            info.i.msg = '查无资料';
+            jqXHR.responseText = JSON.stringify(info);
+          }
+          _renderList(list, true);
+          callback();
+        });
+      }
+
+      function _onPullUp() {
+        offset = offset + pageSize;
+        if (list && list.length !== totalSize) {
+          _getListFromRemote(function (info) {
+            var data = info.i[id].data;
+            list = $.merge(list, data);
+            _renderList(list);
+          });
+        } else {
+          $.gk.message.info('查询完成，已无新数据');
+        }
+        $ele.gk('refresh');
+      }
+
+      function _renderList(data, clean) {
+        if (clean) {
+          self.empty();
+        }
+        self.model(data);
+        $ele.gk('refresh');
+      }
+
+      function _getListFromRemote(callback) {
+        if (url) {
+          var info = {
+            i: {
+              src: id,
+              url: window.location.href
+            },
+            t: 'map'
+          };
+
+          info.i[remoteId] = {
+            offset: offset,
+            pageSize: pageSize,
+            pageSort: false,
+            sortField: '',
+            sortDir: 'none'
+          };
+
+          $.extend(true, info, {
+            i: options
+          });
+
+          var ajax = $.gk.ajax ? $.gk.ajax : $.ajax;
+          ajax({
+            url: url,
+            type: 'POST',
+            dataType: 'json',
+            config: {
+              text: '查询'
+            },
+            data: 'j=' + encodeURIComponent(JSON.stringify(info))
+          }).done(callback);
+        }
+      }
+
+      self.init();
+    }
+
+    registerElement('icsc-pagelistview', {
+      init: function () {
+        new pageviewlist(this);
+      }
+    });
+  </script>
+
+</element>
