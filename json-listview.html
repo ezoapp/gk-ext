@@ -9,6 +9,7 @@
   </template>
 
   <script>
+  //# sourceURL=json-listview.js
   registerElement('json-listview', {
 
     init: function() {
@@ -26,13 +27,12 @@
       $newEle.data('_gk_', this);
       this.$ele.replaceWith($newEle[0]);
       this.$ele = $newEle;
-
-      //        if (typeof this.$ele.attr('repeat') !== 'undefined') {
-      //          this.$ele.html('');
-      //        }
       this.templateHTML = this.$originEle.html();
       this.arrayModelName = this.$ele.attr('repeat');
-      this.$ele.on('click', this.onclick);
+      var self = this;
+      this.$ele.on('click','li', function(e){
+        self.onclick(self,e);
+      });
       this.onClickCallback = function() {};
     },
 
@@ -40,10 +40,10 @@
       this.$ele.listview('refresh');
     },
 
-    onclick: function(e) {
-      var src = $(e.originalEvent.srcElement);
-      if (typeof this.onClickCallback !== null) {
-        this.onClickCallback(src.closest('li'));
+    onclick: function(self, e) {
+      var src = $(e.originalEvent.srcElement).closest('li')[0];
+      if (typeof self.onClickCallback !== 'undefined') {
+        self.onClickCallback(src);
       }
     },
 
