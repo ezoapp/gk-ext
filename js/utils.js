@@ -22,6 +22,44 @@ define(function () {
       newHTML = '<' + tagName + newHTML.substr(oldTagNameLen, newHTML.length);
       newHTML = newHTML.substr(0, newHTML.length - oldTagNameLen) + tagName + '>';
       return $(newHTML);
+    },
+
+    changeTagNameOfGKElment: function changeTagNameOfGKElment(thisObj, newTagName) {
+      var $newEle,
+          $ele = thisObj.$ele,
+          $originEle = thisObj.$originEle,
+          newHTML = $ele[0].cloneNode().outerHTML,
+          oldTagNameLen = $ele[0].tagName.length + 1,
+          attrs = $originEle.prop("attributes");
+
+      // change tagName
+      newHTML = '<' + newTagName + newHTML.substr(oldTagNameLen, newHTML.length);
+      newHTML = newHTML.substr(0, newHTML.length - oldTagNameLen) + newTagName + '>';
+      $newEle = $(newHTML);
+      $ele.clone(true).contents().appendTo($newEle);
+
+      // copy attributes
+      attrs = $originEle.prop("attributes");
+      $.each(attrs, function () {
+        switch (this.name) {
+          case 'class':
+            !$newEle.hasClass(this.value) && $newEle.addClass(this.value);
+            break;
+          case 'is':
+            // do nothing
+            break;
+          default:
+            $newEle.attr(this.name, this.value);
+            break;
+        }
+      });
+
+      // update GK information
+      $newEle.data('_gk_', thisObj);
+      thisObj.$ele.replaceWith($newEle[0]);
+      thisObj.$ele = $newEle;
+
+      return thisObj;
     }
   }
 });

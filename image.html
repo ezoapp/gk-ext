@@ -1,13 +1,25 @@
 <element name='image'>
 
   <template>
-    <div id='{{id}}'>
+    <div id='{{id}}' style='{{style}}' src='{{src}}'>
       <content></content>
     </div>
   </template>
 
   <script>
-  registerElement('image');
+    var utils = require('./js/utils');
+
+    registerElement('image', {
+
+      init: function() {
+        var tagName = this.$ele.prop('tagName').toLowerCase(),
+            newTagName = this.$originEle[0].tagName.toLowerCase();
+        if (newTagName !== tagName) {
+          utils.changeTagNameOfGKElment(this, newTagName);
+        }
+      }
+
+    });
   </script>
 
 </element>

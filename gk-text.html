@@ -7,48 +7,42 @@
   </template>
 
   <script>
-  registerElement('gk-text', {
+    var utils = require('./js/utils');
 
-    html: '',
+    registerElement('gk-text', {
 
-    init: function() {
-      this.html = this.$ele.html().trim();
-      var tagName = this.$originEle[0].tagName;
-      var newHTML = this.$ele[0].outerHTML;
-      var oldTagNameLen = this.$ele[0].tagName.length + 1;
-      newHTML = '<' + tagName + newHTML.substr(oldTagNameLen, newHTML.length);
-      newHTML = newHTML.substr(0, newHTML.length - oldTagNameLen) + tagName + '>';
-      var $newEle = $(newHTML);
-      var attributes = this.$originEle.prop("attributes");
-      $.each(attributes, function() {
-        $newEle.attr(this.name, this.value);
-      });
-      $newEle.data('_gk_', this);
-      this.$ele.replaceWith($newEle[0]);
-      this.$ele = $newEle;
-    },
+      html: '',
 
-    text: function(val) {
-      if (val !== undefined) {
-        return this.$ele.text(val);
-      } else {
-        return this.$ele.text();
-      }
-    },
-
-    apply: function(info) {
-      var html = this.html;
-      for (var property in info) {
-        if (info.hasOwnProperty(property)) {
-          var regex = new RegExp('\\${' + property + '}', "gi");
-          html = html.replace(regex, info[property]);
+      init: function () {
+        this.html = this.$ele.html().trim();
+        var tagName = this.$ele.prop('tagName').toLowerCase(),
+            newTagName = this.$originEle[0].tagName.toLowerCase();
+        if (newTagName !== tagName) {
+          utils.changeTagNameOfGKElment(this, newTagName);
         }
-      }
-      var $html = $('<div>' + html + '</div>');
-      this.$ele.html($html.html());
-    }
+      },
 
-  });
+      text: function (val) {
+        if (val !== undefined) {
+          return this.$ele.text(val);
+        } else {
+          return this.$ele.text();
+        }
+      },
+
+      apply: function (info) {
+        var html = this.html;
+        for (var property in info) {
+          if (info.hasOwnProperty(property)) {
+            var regex = new RegExp('\\${' + property + '}', "gi");
+            html = html.replace(regex, info[property]);
+          }
+        }
+        var $html = $('<div>' + html + '</div>');
+        this.$ele.html($html.html());
+      }
+
+    });
   </script>
 
 </element>

@@ -10,153 +10,171 @@
   </template>
 
   <script>
-  window.gmapReady = {
-    js: function() {
-      $(document).triggerHandler('gmapReady');
-    }
-  };
+    window.gmapReady = {
+      js: function() {
+        $(document).triggerHandler('gmapReady');
+      }
+    };
 
-  registerElement('gmap', {
+    registerElement('gmap', {
 
-    init: function() {
-      var self = this;
-      var $page = self.$ele.parents('[data-role="page"]');
-      var initialize = function() {
-        self.$map = $(self.$ele.children()[0]);
-        self.options = {};
-        var h = document.documentElement.clientHeight;
-        var w = document.documentElement.clientWidth;
-        if (self.$ele.attr('data-gk-style') === '{{style}}') {
-          self.$ele.css({
-            width: w + 'px',
-            height: h + 'px'
+      init: function() {
+        var self = this;
+        self.isReady = false;
+        var $page = self.$ele.parents('[data-role="page"]');
+        var initialize = function() {
+          self.$map = $(self.$ele.children()[0]);
+          self.options = {};
+          self.isReady = true;
+          var h = document.documentElement.clientHeight;
+          var w = document.documentElement.clientWidth;
+          if (self.$ele.attr('data-gk-style') === '{{style}}') {
+            self.$ele.css({
+              width: w + 'px',
+              height: h + 'px'
+            });
+          } else {
+            self.$ele.attr('style', self.$ele.attr('data-gk-style'));
+          }
+          self.options['zoom'] = self.$ele.attr('zoom') ? parseInt(self.$ele.attr('zoom')) : '12';
+          self.options['mapTypeId'] = self.$ele.attr('mapTypeId') ? self.$ele.attr('mapTypeId') : google.maps.MapTypeId.ROADMAP;
+          self.options['title'] = self.$ele.attr('markerTitle') ? self.$ele.attr('markerTitle') : '';
+          var address = (typeof self.$ele.attr('address') !== 'undefined') ? self.$ele.attr('address') : $.trim(self.$map.next().html());
+          var latitude = self.$ele.attr('latitude'),
+              longitude = self.$ele.attr('longitude');
+          if ($.isNumeric(latitude) && $.isNumeric(longitude)) {
+            self.options['center'] = new google.maps.LatLng(parseFloat(latitude, 10), parseFloat(longitude, 10));
+            self.map = new google.maps.Map(document.getElementById(self.id), self.options);
+            self.markerTitle();
+          } else if (address) {
+            self.address(address);
+          } else {
+            self.options['center'] = new google.maps.LatLng(22.606444, 120.301617);
+            self.map = new google.maps.Map(document.getElementById(self.id), self.options);
+          }
+
+          $page.on('pageshow', function() {
+            google.maps.event.trigger(self.map, 'resize');
           });
-        } else {
-          self.$ele.attr('style', self.$ele.attr('data-gk-style'));
-        }
-        self.options['zoom'] = self.$ele.attr('zoom') ? parseInt(self.$ele.attr('zoom')) : '12';
-        self.options['mapTypeId'] = self.$ele.attr('mapTypeId') ? self.$ele.attr('mapTypeId') : google.maps.MapTypeId.ROADMAP;
-        self.options['title'] = self.$ele.attr('markerTitle') ? self.$ele.attr('markerTitle') : '';
-        var address = (typeof self.$ele.attr('address') !== 'undefined') ? self.$ele.attr('address') : $.trim(self.$map.next().html());
-        var latitude = self.$ele.attr('latitude'),
-          longitude = self.$ele.attr('longitude');
-        if ($.isNumeric(latitude) && $.isNumeric(longitude)) {
-          self.options['center'] = new google.maps.LatLng(parseFloat(latitude, 10), parseFloat(longitude, 10));
-          self.map = new google.maps.Map(document.getElementById(self.id), self.options);
-          self.markerTitle();
-        } else if (address) {
-          self.address(address);
-        } else {
-          self.options['center'] = new google.maps.LatLng(22.606444, 120.301617);
-          self.map = new google.maps.Map(document.getElementById(self.id), self.options);
-        }
+        };
 
-        $page.on('pageshow', function() {
-          google.maps.event.trigger(self.map, 'resize');
+        $(document).on('gmapReady', function() {
+          if ($page.length && !$page.hasClass('ui-page-active')) {
+            $page.one('pageshow', initialize);
+          } else {
+            initialize();
+          }
         });
-      };
+        require(['https://maps.google.com/maps/api/js?sensor=false&callback=gmapReady']);
+      },
 
-      $(document).on('gmapReady', function() {
-        if ($page.length && !$page.hasClass('ui-page-active')) {
-          $page.one('pageshow', initialize);
+      height: function(h) {
+        if (h) {
+          this.$ele.css('height', h);
+          this._height = h;
+          google.maps.event.trigger(this.map, "resize");
         } else {
-          initialize();
+          return this._height;
         }
-      });
-      require(['https://maps.google.com/maps/api/js?sensor=false&callback=gmapReady']);
-    },
+      },
 
-    height: function(h) {
-      if (h) {
-        this.$ele.css('height', h);
-        this._height = h;
-        google.maps.event.trigger(this.map, "resize");
-      } else {
-        return this._height;
-      }
-    },
-
-    width: function(w) {
-      if (w) {
-        this.$ele.css('width', w);
-        this._width = w;
-        google.maps.event.trigger(this.map, "resize");
-      } else {
-        return this._width;
-      }
-    },
-
-    nowPos: function(markerTitle) {
-      var self = this;
-      markerTitle = (markerTitle) ? markerTitle : 'You are here now.';
-      navigator.geolocation.getCurrentPosition(
-        function success(position) {
-          var lat = position.coords.latitude;
-          var lng = position.coords.longitude;
-          self.location(lat, lng);
-          self.markerTitle(markerTitle);
-        },
-        function error(err) {
-          console.warn('ERROR(' + err.code + '): ' + err.message);
-        }, {
-          enableHighAccuracy: true,
-          timeout: 5000,
-          maximumAge: 0
+      width: function(w) {
+        if (w) {
+          this.$ele.css('width', w);
+          this._width = w;
+          google.maps.event.trigger(this.map, "resize");
+        } else {
+          return this._width;
         }
-      );
-    },
+      },
 
-    location: function(lat, lng) {
-      this.options['center'] = new google.maps.LatLng(lat, lng);
-      this.map.setZoom(parseInt(this.options['zoom'], 10));
-      this.map.setCenter(this.options['center']);
-    },
+      nowPos: function(markerTitle) {
+        var self = this;
+        markerTitle = (markerTitle) ? markerTitle : 'You are here now.';
+        navigator.geolocation.getCurrentPosition(
+            function success(position) {
+              var lat = position.coords.latitude;
+              var lng = position.coords.longitude;
+              self.location(lat, lng);
+              self.markerTitle(markerTitle);
+            },
+            function error(err) {
+              console.warn('ERROR(' + err.code + '): ' + err.message);
+            }, {
+              enableHighAccuracy: true,
+              timeout: 5000,
+              maximumAge: 0
+            }
+        );
+      },
 
-    zoom: function(zoom) {
-      if (typeof zoom !== 'undefined') {
-        this.options['zoom'] = zoom;
+      location: function(lat, lng) {
+        if(!this.isReady){
+          this.$ele.attr('latitude',lat),
+              this.$ele.attr('longitude',lng);
+          return;
+        }
+        this.options['center'] = new google.maps.LatLng(lat, lng);
         this.map.setZoom(parseInt(this.options['zoom'], 10));
         this.map.setCenter(this.options['center']);
-      } else {
-        return this.map.zoom;
-      }
-    },
+      },
 
-    address: function(addr) {
-      var self = this;
-      new google.maps.Geocoder().geocode({
-          address: addr
-        },
-        function(result, status) {
-          if (status == google.maps.GeocoderStatus.OK) {
-            self.options['center'] = result[0].geometry.location;
-            if (!self.map) {
-              self.map = new google.maps.Map(document.getElementById(self.id), self.options);
-            } else {
-              self.map.setZoom(parseInt(self.options['zoom'], 10));
-              self.map.setCenter(self.options['center']);
-            }
-            self.markerTitle(self.options['title'] ? self.options['title'] : addr);
-          }
+      zoom: function(zoom) {
+        if(!this.isReady){
+          this.$ele.attr('zoom',zoom);
+          return;
         }
-      );
-    },
+        if (typeof zoom !== 'undefined') {
+          this.options['zoom'] = zoom;
+          this.map.setZoom(parseInt(this.options['zoom'], 10));
+          this.map.setCenter(this.options['center']);
+        } else {
+          return this.map.zoom;
+        }
+      },
+      address: function(addr) {
+        if(!this.isReady){
+          this.$ele.attr('address',addr);
+          return;
+        }
+        var self = this;
+        new google.maps.Geocoder().geocode({
+              address: addr
+            },
+            function(result, status) {
+              if (status == google.maps.GeocoderStatus.OK) {
+                self.options['center'] = result[0].geometry.location;
+                if (!self.map) {
+                  self.map = new google.maps.Map(document.getElementById(self.id), self.options);
+                } else {
+                  self.map.setZoom(parseInt(self.options['zoom'], 10));
+                  self.map.setCenter(self.options['center']);
+                }
+                self.markerTitle(self.options['title'] ? self.options['title'] : addr);
+              }
+            }
+        );
+      },
 
-    markerTitle: function(markerTitle) {
-      if (typeof markerTitle !== 'undefined') {
-        this.options['title'] = markerTitle;
+      markerTitle: function(markerTitle) {
+        if(!this.isReady){
+          this.$ele.attr('markerTitle',markerTitle);
+          return;
+        }
+        if (typeof markerTitle !== 'undefined') {
+          this.options['title'] = markerTitle;
+        }
+        if (this.marker) {
+          this.marker.setMap(null);
+        }
+        this.marker = new google.maps.Marker({
+          map: this.map,
+          position: this.options['center'],
+          title: this.options['title']
+        });
       }
-      if (this.marker) {
-        this.marker.setMap(null);
-      }
-      this.marker = new google.maps.Marker({
-        map: this.map,
-        position: this.options['center'],
-        title: this.options['title']
-      });
-    }
 
-  });
+    });
   </script>
 
 </element>

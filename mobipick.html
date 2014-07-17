@@ -1,20 +1,7 @@
+<script src='mobipick/modernizr.custom.min.js'></script>
+<script src='mobipick/xdate.js'></script>
+<script src='mobipick/xdate.i18n.js'></script>
 <script src='mobipick/mobipick.js'></script>
-<script>
-requirejs.config({
-  context: 'gk',
-  shim: {
-    'components/gk-ext/mobipick/mobipick': {
-      deps: ['components/gk-ext/mobipick/xdate.i18n']
-    },
-    'components/gk-ext/mobipick/xdate.i18n': {
-      deps: ['components/gk-ext/mobipick/xdate']
-    },
-    'components/gk-ext/mobipick/xdate': {
-      deps: ['components/gk-ext/mobipick/modernizr.custom.min']
-    }
-  }
-});
-</script>
 
 <element name='mobipick'>
 

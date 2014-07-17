@@ -1,0 +1,121 @@
+<script src="../jquery-simpleweather/jquery.simpleWeather.min.js"></script>
+
+<element name='simple-weather'>
+
+  <template>
+    <div id='{{id}}' style='{{style}}' geolocation='{{geolocation}}' location='{{location}}' unit='{{unit}}' autoupdate='{{autoupdate}}'>
+      <content></content>
+    </div>
+  </template>
+
+  <script>
+  function template(txt) {
+    return new Function("obj", "var p=[];(function(){p.push('" +
+      txt.replace(/[\r\t]/g, " ")
+      .replace(/[\n]/g, "\\n")
+      .split("{{").join("\t")
+      .replace(/((^|\}\})[^\t]*)'/g, "$1\r")
+      // escape other single quotes
+      .split("'").join("\\'")
+      .replace(/\t(.*?)\}\}/g, "',this.$1,'")
+      .split("\t").join("');")
+      .split("}}").join("p.push('")
+      .split("\r").join("\\'") + "');}).call(obj); return p.join('');");
+  }
+
+  function getWeather(options, success, fail) {
+    try {
+      var getData = function() {
+        $.simpleWeather({
+          // woeid: options['woeid'],
+          location: options['location'],
+          unit: options['unit'],
+          success: success,
+          error: fail
+        });
+      };
+
+      if (options['geolocation'] === 'true') {
+        navigator.geolocation.getCurrentPosition(function(position) {
+          //Set location using your lat/lng coordinates
+          options['location'] = position.coords.latitude + ',' + position.coords.longitude;
+          getData();
+        }, fail);
+      } else {
+        getData();
+      }
+    } catch (e) {
+
+    }
+  }
+
+  registerElement('simple-weather', {
+    init: function() {
+      var self = this;
+      self.options = {};
+      self.options.woeid = '';
+      self.options['geolocation'] = self.$ele.attr('geolocation') || 'true';
+      self.options['location'] = self.$ele.attr('location') || '';
+      self.options['unit'] = self.$ele.attr('unit') || 'c';
+      self.options['autoupdate'] = self.$ele.attr('autoupdate') || 0;
+      self.tmpl = self.$originEle.html();
+      self.__interval = {};
+
+      self.fail = function(error) {
+        self.autoupdate(0);
+        self.$ele.html(JSON.stringify(error));
+      };
+
+      self.$ele.css('visibility', 'hidden');
+      getWeather(self.options, function(data) {
+        var tmpl = template(self.tmpl);
+        self.data = data;
+        self.$ele.html(tmpl(data));
+        self.$ele.css('visibility', 'visible');
+        self.autoupdate(self.options['autoupdate']);
+      }, function(error) {
+        self.fail();
+        self.$ele.css('visibility', 'visible');
+      });
+    },
+
+    geolocation: function(value) {
+      return value === undefined ? self.options['geolocation'] : self.options['geolocation'] = value + '';
+    },
+
+    location: function(value) {
+      return value === undefined ? self.options['location'] : self.options['location'] = value;
+    },
+
+    unit: function(value) {
+      return value === undefined ? self.options['unit'] : self.options['unit'] = value;
+    },
+
+    data: function() {
+      return self.data;
+    },
+
+    autoupdate: function(milliseconds) {
+      var ms = parseInt(milliseconds);
+      if (ms === 0) {
+        !self.__interval || clearInterval(self.__interval);
+      } else if (ms) {
+        self.__interval = setInterval(self.refresh, ms);
+      }
+    },
+
+    refresh: function(failure) {
+      if (typeof failure === 'function') {
+        self.fail = failure;
+      }
+
+      getWeather(self.options, function(data) {
+        var tmpl = template(self.tmpl);
+        self.data = data;
+        self.$ele.html(tmpl(data));
+      }, self.fail);
+    }
+  });
+  </script>
+
+</element>

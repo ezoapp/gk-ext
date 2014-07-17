@@ -1,0 +1,191 @@
+<element name='page-listview'>
+
+  <template>
+    <ul id='{{id}}' style='{{style}}' pageSize='{{pageSize}}' url='{{url}}' data-role='listview' data-autodividers='{{data-autodividers}}' data-count-theme='{{data-count-theme}}' data-divider-theme='{{data-divider-theme}}' data-filter='{{data-filter}}' data-filter-placeholder='{{data-filter-placeholder}}' data-filter-reveal='{{data-filter-reveal}}' data-filter-theme='{{data-filter-theme}}' data-icon='{{data-icon}}' data-inset='{{data-inset}}' data-split-icon='{{data-split-icon}}' data-split-theme='{{data-split-theme}}' data-theme='{{data-theme}}'>
+      <content></content>
+    </ul>
+  </template>
+
+  <script>
+  var utils = require('./js/utils');
+
+  registerElement('page-listview', {
+    init: function() {
+      var view = new PageListView(this);
+      view.init();
+    }
+  });
+
+  function PageListView(instance) {
+    'use strict';
+
+    var self = instance,
+      $ele = self.$ele,
+      id = $ele.attr('id'),
+      eventBus = /\.go$/,
+      rowCallback, templateHtml = $ele.html(),
+      pageSize = $ele.attr('pageSize') ? +$ele.attr('pageSize') : 30,
+      url = $ele.attr('url'),
+      options, offset = 0,
+      currentSize = 0,
+      totalSize = 0;
+
+    this.init = self.init = function() {
+      var $window = $(window),
+        $doc = $(document);
+
+      // 初始限制筆數，避免筆數太少無法觸動 Scroll 事件
+      if (pageSize < 30) {
+        pageSize = 30;
+      }
+
+      // 若使用者輸入的 tagName 與 template 不同，如 ol，則將所有內容複製到新的 tagName 中
+      if (self.$originEle[0].tagName.toLowerCase() !== $ele.prop('tagName').toLowerCase()) {
+        var $newEle = utils.replaceGKTagName(self.$originEle[0].tagName, $ele),
+          attributes = $ele[0].attributes;
+        $.each(attributes, function() {
+          $newEle.attr(this.name, this.value);
+        });
+        $newEle.data('_gk_', self);
+        $ele.replaceWith($newEle[0]);
+        $ele = $newEle;
+      }
+
+      $ele.on('click', 'li', function(e) {
+        if (rowCallback) {
+          var $li = $(this);
+          rowCallback.apply(self, [e, $li.data('row'), $li]);
+        }
+      });
+
+      $window.on('scrollstop', function() {
+        if ($window.scrollTop() + window.innerHeight === $doc.height() && currentSize !== totalSize && _activePage()) {
+          _getNextPage(false);
+        }
+      });
+
+      if (url) {
+        _getNextPage(true);
+      }
+    };
+
+    self.onRow = function(callback) {
+      if (callback && typeof(callback) === 'function') {
+        rowCallback = callback;
+      }
+    };
+
+    self.refresh = function() {
+      $ele.listview('refresh');
+    };
+
+    self.pageSize = function(size) {
+      if (size) {
+        pageSize = size;
+      } else {
+        return pageSize;
+      }
+    };
+
+    self.remote = function(newUrl, newOptions) {
+      url = newUrl;
+      options = newOptions;
+      offset = 0;
+      currentSize = 0;
+      totalSize = 0;
+      _getNextPage(true);
+    };
+
+    function _getNextPage(clear) {
+      _mask();
+      _getListFromRemote().done(function(info) {
+        var data;
+        if (_isEventBus(url)) {
+          data = info.i[id].data;
+          totalSize = info.i[id].totalSize;
+        } else {
+          data = info.data;
+          totalSize = info.totalSize;
+        }
+        currentSize += data.length;
+        offset += pageSize;
+        _model(data, clear);
+      }).always(function() {
+        _unmask();
+      });
+    }
+
+    function _model(model, clear) {
+      if (clear) {
+        $ele.empty();
+      }
+
+      $(model).each(function(idx, obj) {
+        var newOne = templateHtml;
+        for (var key in obj) {
+          var regex = new RegExp('\\{{' + key + '}}', 'g');
+          newOne = newOne.replace(regex, obj[key]);
+        }
+        $(newOne.trim()).appendTo($ele).data('row', obj);
+      });
+      self.refresh();
+    }
+
+    function _isEventBus(url) {
+      return eventBus.test(url);
+    }
+
+    function _activePage() {
+      return $('body').pagecontainer('getActivePage')[0] === $ele.parents('[data-role=page]')[0];
+    }
+
+    function _mask() {
+      $.mobile.loading('show', {
+        textVisible: true
+      });
+    }
+
+    function _unmask() {
+      $.mobile.loading('hide');
+    }
+
+    function _getListFromRemote() {
+      var data;
+      if (_isEventBus(url)) {
+        var info = {
+          i: {
+            src: id,
+            url: window.location.href
+          },
+          t: 'map'
+        };
+        info.i[id + '.pagebar'] = {
+          offset: offset,
+          pageSize: pageSize,
+          pageSort: false,
+          sortField: '',
+          sortDir: 'none'
+        };
+        $.extend(true, info, {
+          i: options
+        });
+        data = 'j=' + encodeURIComponent(JSON.stringify(info));
+      } else {
+        data = {
+          offset: offset,
+          pageSize: pageSize,
+          options: options && encodeURIComponent(JSON.stringify(options))
+        };
+      }
+
+      var ajax = $.gk.ajax || $.ajax;
+      return ajax({
+        url: url,
+        dataType: 'json',
+        data: data
+      });
+    }
+  }
+  </script>
+
+</element>

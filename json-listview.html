@@ -1,95 +1,127 @@
-<script src='js/utils.js' var='utils'></script>
-
 <element name='json-listview'>
 
   <template>
-    <ul id='{{id}}' data-role='listview' repeat='{{repeat}}' style='{{style}}' data-gk-click='{{onclick}}' data-autodividers='{{data-autodividers}}' data-divider-theme='{{data-divider-theme}}' data-filter-reveal='{{data-filter-reveal}}' data-filter='{{data-filter}}' data-filter-placeholder='{{data-filter-placeholder}}' data-filter-theme='{{data-filter-theme}}' data-icon='{{data-icon}}' data-inset='{{data-inset}}' data-split-icon='{{data-split-icon}}' data-split-theme='{{data-split-theme}}' data-theme='{{data-theme}}' data-count-theme='{{data-count-theme}}'>
+    <ul id='{{id}}' data-role='listview' repeat='{{repeat}}' style='{{style}}' data-autodividers='{{data-autodividers}}'
+        data-divider-theme='{{data-divider-theme}}' data-filter-reveal='{{data-filter-reveal}}'
+        data-filter='{{data-filter}}' data-filter-placeholder='{{data-filter-placeholder}}'
+        data-filter-theme='{{data-filter-theme}}' data-icon='{{data-icon}}' data-inset='{{data-inset}}'
+        data-split-icon='{{data-split-icon}}' data-split-theme='{{data-split-theme}}' data-theme='{{data-theme}}'
+        data-count-theme='{{data-count-theme}}'>
       <content></content>
     </ul>
   </template>
 
   <script>
-  //# sourceURL=json-listview.js
-  registerElement('json-listview', {
+    var utils = require('./js/utils');
 
-    init: function() {
-      this.html = this.$ele.html().trim();
-      if (typeof String.prototype.trim !== 'function') {
-        String.prototype.trim = function() {
-          return this.replace(/^\s+|\s+$/g, '');
+    var getParamNames = function (func) {
+      var STRIP_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/mg;
+      var fnStr = func.toString().replace(STRIP_COMMENTS, '');
+      var result = fnStr.slice(fnStr.indexOf('(') + 1, fnStr.indexOf(')')).match(/([^\s,]+)/g);
+      return result === null ? [] : result;
+    };
+
+    registerElement('json-listview', {
+
+      init: function () {
+        var tagName = this.$ele.prop('tagName').toLowerCase(),
+            newTagName = this.$originEle[0].tagName.toLowerCase();
+        this.html = this.$ele.html().trim();
+        if (typeof String.prototype.trim !== 'function') {
+          String.prototype.trim = function () {
+            return this.replace(/^\s+|\s+$/g, '');
+          }
         }
+        if (newTagName !== tagName) {
+          utils.changeTagNameOfGKElment(this, newTagName);
+        }
+
+        //        if (typeof this.$ele.attr('repeat') !== 'undefined') {
+        //          this.$ele.html('');
+        //        }
+        this.templateHTML = this.$originEle.html();
+        this.arrayModelName = this.$ele.attr('repeat');
+        var self = this;
+        this.$ele.on('click', 'li:not([data-role="list-divider"])', function (e) {
+          if (typeof self.onSelectCallback === 'function') {
+            var params = getParamNames(self.onSelectCallback),
+                $li = $(this);
+            if (params.length == 1 && params[0] !== "vo") {
+              self.onSelectCallback($li);
+            } else {
+              var vo = $li.data('row');
+              var providerParams = {
+                "event": e,
+                "vo": vo
+              };
+              var injectionParams = [];
+              $.each(params, function (idx, obj) {
+                injectionParams.push(providerParams[obj]);
+              });
+              if (typeof self.onSelectCallback !== null) {
+                self.onSelectCallback.apply(self, injectionParams);
+              }
+            }
+          } else {
+            self.onSelectCallback = function () {
+            };
+          }
+        });
+      },
+
+      refresh: function () {
+        this.$ele.listview('refresh');
+      },
+
+      onRow: function (callback) {
+        this.onSelectCallback = callback;
+      },
+
+      model: function (model) {
+        var self = this;
+        self.$ele.listview({
+          autodividersSelector: function (li) {
+            return self.$ele.attr('autodividers') === 'undefined' ?
+                null : li.attr('divider');
+          }
+        });
+        var iterator = typeof self.arrayModelName == 'undefined' ?
+            model : model[self.arrayModelName];
+        self.$ele.html('');
+        $(iterator).each(function (idx, obj) {
+          var newOne = self.templateHTML;
+          for (var key in obj) {
+            var regex = new RegExp('{{' + key + '}}|\\${'+key+'}', "g");
+            newOne = newOne.replace(regex, obj[key]);
+          }
+          $(newOne.trim()).appendTo(self.$ele).data('row', obj);
+        });
+        this.$ele.listview('refresh');
+      },
+
+      apply: function (info) {
+        var html = this.html;
+        for (var property in info) {
+          if (info.hasOwnProperty(property)) {
+            var regex = new RegExp('{{' + property + '}}|\\${'+property+'}', "g");
+            html = html.replace(regex, info[property]);
+          }
+        }
+        for (var property in info) {
+          if (info.hasOwnProperty(property)) {
+            var regex = new RegExp('{{' + property + '}}', "gi");
+            html = html.replace(regex, info[property]);
+          }
+        }
+        var $html = $('<div>' + html + '</div>');
+        $html.find('[data-readonly=Y]').each(function (idx, node) {
+          $(node).replaceWith($(node).html());
+        });
+        this.$ele.html($html.html());
+        this.$ele.listview("refresh", true);
       }
-      var $newEle = utils.replaceGKTagName(this.$originEle[0].tagName, this.$ele),
-        attributes = this.$originEle.prop("attributes");
-      $.each(attributes, function() {
-        $newEle.attr(this.name, this.value);
-      });
-      $newEle.data('_gk_', this);
-      this.$ele.replaceWith($newEle[0]);
-      this.$ele = $newEle;
-      this.templateHTML = this.$originEle.html();
-      this.arrayModelName = this.$ele.attr('repeat');
-      var self = this;
-      this.$ele.on('click','li', function(e){
-        self.onclick(self,e);
-      });
-      this.onClickCallback = function() {};
-    },
 
-    refresh: function() {
-      this.$ele.listview('refresh');
-    },
-
-    onclick: function(self, e) {
-      var src = $(e.originalEvent.srcElement).closest('li')[0];
-      if (typeof self.onClickCallback !== 'undefined') {
-        self.onClickCallback(src);
-      }
-    },
-
-    onRow: function(callback) {
-      this.onClickCallback = callback;
-    },
-
-    model: function(model) {
-      var self = this;
-      self.$ele.listview({
-        autodividersSelector: function(li) {
-          return self.$ele.attr('autodividers') === 'undefined' ?
-            null : li.attr('divider');
-        }
-      });
-      var iterator = typeof self.arrayModelName == 'undefined' ?
-        model : model[self.arrayModelName];
-      self.$ele.html('');
-      $(iterator).each(function(idx, obj) {
-        var newOne = self.templateHTML;
-        for (var key in obj) {
-          var regex = new RegExp('{{' + key + '}}', "g");
-          newOne = newOne.replace(regex, obj[key]);
-        }
-        self.$ele.append(newOne);
-      });
-      this.$ele.listview('refresh');
-    },
-
-    apply: function(info) {
-      var html = this.html;
-      for (var property in info) {
-        if (info.hasOwnProperty(property)) {
-          var regex = new RegExp('\\${' + property + '}', "gi");
-          html = html.replace(regex, info[property]);
-        }
-      }
-      var $html = $('<div>' + html + '</div>');
-      $html.find('[data-readonly=Y]').each(function(idx, node) {
-        $(node).replaceWith($(node).html());
-      });
-      this.$ele.html($html.html());
-      this.$ele.listview("refresh", true);
-    }
-
-  });
+    });
   </script>
 
 </element>
