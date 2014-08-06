@@ -3,7 +3,6 @@
     "authors": [
         "EZoUI <ezoservice@icsc.com.tw>"
     ],
-    "main": "all.html",
     "keywords": [
         "gk",
         "web-components"
@@ -15,6 +14,7 @@
         "bxSlider": "master",
         "flippant": "https://github.com/mintchaos/flippant.js.git#master",
         "raty": "master",
+        "jquery.gk": "master",
         "jquery.qrcode": "master",
         "jquery-simpleweather": "master"
     },
