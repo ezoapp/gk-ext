@@ -12,8 +12,10 @@
   registerElement('raty', {
 
     init: function() {
-      var moduleId = module.id,
-        baseURL = moduleId.substr(moduleId.indexOf('!') + 1) + '/../';
+      var baseURL = require.toUrl('./');
+      if (baseURL.indexOf('!') !== -1) {
+        baseURL = '/' + baseURL.slice(baseURL.indexOf('!') + 1);
+      }
       this.$ele.raty({
         starOff: baseURL + '../raty/lib/images/star-off.png',
         starOn: baseURL + '../raty/lib/images/star-on.png'
