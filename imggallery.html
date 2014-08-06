@@ -12,20 +12,17 @@
   registerElement('imggallery', {
 
     init: function() {
+      var tagName = this.$ele.prop('tagName').toLowerCase(),
+        newTagName = this.$originEle[0].tagName.toLowerCase();
       this.html = this.$ele.html().trim();
       if (typeof String.prototype.trim !== 'function') {
         String.prototype.trim = function() {
           return this.replace(/^\s+|\s+$/g, '');
         }
       }
-      var $newEle = utils.replaceGKTagName(this.$originEle[0].tagName, this.$ele),
-        attributes = this.$originEle.prop("attributes");
-      $.each(attributes, function() {
-        $newEle.attr(this.name, this.value);
-      });
-      $newEle.data('_gk_', this);
-      this.$ele.replaceWith($newEle[0]);
-      this.$ele = $newEle;
+      if (newTagName !== tagName) {
+        utils.changeTagNameOfGKElment(this, newTagName);
+      }
       this.templateHTML = this.$originEle.html();
     },
 
@@ -41,7 +38,7 @@
       $(iterator).each(function(idx, obj) {
         var newOne = self.templateHTML;
         for (var key in obj) {
-          var regex = new RegExp('{{' + key + '}}', "g");
+          var regex = new RegExp('{{' + key + '}}|\\${' + key + '}', "g");
           newOne = newOne.replace(regex, obj[key]);
 
           if ('data-src' === key) {
