@@ -1,0 +1,106 @@
+<link rel="import" href="gk-google-sheets.html">
+
+<element name="google-sheets-table">
+
+  <template>
+    <div id="{{id}}" key="{{key}}" border="{{border}}">
+      <table id="{{id}}_table" class="{{class}}" style="{{style}}" data-role="table" data-mode="columntoggle">
+        <thead>
+          <tr></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <gk-google-sheets id="{{id}}_sheet"></gk-google-sheets>
+    </div>
+  </template>
+
+  <script>
+  function getPageId($ele) {
+    return '#' + $ele.closest('[data-role="page"]').attr('id');
+  }
+
+  function convertSheetData(data) {
+    var ret = [];
+    data.forEach(function(entry) {
+      var o = {};
+      Object.keys(entry).forEach(function(key) {
+        if (key.indexOf('gsx$') === 0) {
+          o[key.substr(4)] = entry[key]['$t'];
+        }
+      });
+      ret.push(o);
+    });
+    return ret;
+  }
+
+  registerElement('google-sheets-table', {
+
+    $sheet: null,
+
+    init: function() {
+      var self = this,
+        $ele = self.$ele;
+
+      $(document).on('pageinit', getPageId($ele), function() {
+
+        var $table = $ele.find('#' + self.id + '_table'),
+          $sheet = $ele.find('#' + self.id + '_sheet');
+
+        $sheet.on('data', function() {
+          var tableData = convertSheetData($sheet.gk().rows);
+
+          var th = [];
+          var thNum = 0;
+
+          for (var key in tableData[0]) {
+            th[thNum] = key;
+            thNum = thNum + 1;
+          }
+
+          for (var k = 0; k < th.length; k++) {
+            $table.find('thead tr').append(
+              '<th data-priority="critical">' + th[k] + '</th>'
+            );
+          }
+
+          for (var i = 0; i < tableData.length; i++) {
+            $table.find('tbody').append(
+              '<tr>' + tableContent(i, th, tableData) + '</tr>'
+            );
+          }
+
+          $table.css({
+            'width': '100%'
+          });
+          $table.find('th,td').css({
+            'border': '1px solid #ccc',
+            'text-align': 'left',
+            'text-shadow': 'none',
+            'font-size': '13px'
+          });
+
+          $table.table("refresh");
+
+        });
+        self.$sheet = $sheet;
+        self.refresh();
+      });
+
+
+      function tableContent(p, q, r) {
+        var a;
+        for (var j = 0; j < q.length; j++) {
+          a += '<td>' + r[p][q[j]] + '</td>'
+        }
+        return a;
+      }
+    },
+
+    refresh: function() {
+      this.$sheet.attr('key', this.$ele.attr('key')).gk('refresh');
+    }
+
+  });
+  </script>
+
+</element>

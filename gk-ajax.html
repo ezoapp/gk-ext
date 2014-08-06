@@ -1,0 +1,86 @@
+<element name="gk-ajax">
+
+  <template>
+    <div id="{{id}}" url="{{url}}" handleAs="{{handleAs}}" auto="{{auto}}" data="{{data}}" response="{{response}}" method="{{method}}" headers="{{headers}}" contentType="{{contentType}}" withCredentials="{{withCredentials}}">
+      <content></content>
+    </div>
+  </template>
+
+  <script>
+  function readSettings(getter) {
+    var settings = {};
+    attributes.some(function(x) {
+      var val = getter(x);
+      if (val) {
+        switch (x) {
+          case 'handleAs':
+            settings.dataType = val;
+            break;
+          case 'method':
+            settings.type = val;
+            break;
+          case 'data':
+          case 'headers':
+            settings[x] = JSON.parse(val);
+            break;
+          default:
+            settings[x] = val;
+            break;
+        }
+      }
+    });
+    return settings;
+  }
+
+  var attributes = ["url", "handleAs", "auto", "data", "response", "method", "headers", "contentType", "withCredentials"];
+
+  registerElement('gk-ajax', {
+
+    url: '',
+
+    handleAs: '',
+
+    auto: false,
+
+    data: '',
+
+    response: null,
+
+    method: '',
+
+    headers: null,
+
+    contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+
+    withCredentials: false,
+
+    xhrArgs: {},
+
+    go: function() {
+      var self = this,
+        $ele = self.$ele,
+        settings = readSettings(function(attr) {
+          var val = $ele.attr(attr);
+          return typeof val === 'undefined' ? self[attr] : val;
+        });
+
+      settings.xhrFields = self.xhrArgs || {};
+      settings.xhrFields.withCredentials = !!settings.withCredentials;
+      settings.success = function() {
+        self.response = arguments[0];
+        $ele.triggerHandler('response', arguments);
+      };
+      settings.error = function() {
+        $ele.triggerHandler('error', arguments);
+      };
+      settings.complete = function() {
+        $ele.triggerHandler('complete', arguments);
+      };
+
+      $.ajax(settings);
+    }
+
+  });
+  </script>
+
+</element>

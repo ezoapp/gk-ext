@@ -1,0 +1,61 @@
+<link rel="import" href="json-listview.html">
+<link rel="import" href="gk-google-sheets.html">
+
+<element name='google-sheets-listview'>
+
+  <template>
+    <div id="{{id}}" key="{{key}}">
+      <ul id='{{id}}_list' data-role='listview' repeat='{{repeat}}' style='{{style}}' data-autodividers='{{data-autodividers}}' data-divider-theme='{{data-divider-theme}}' data-filter-reveal='{{data-filter-reveal}}' data-filter='{{data-filter}}' data-filter-placeholder='{{data-filter-placeholder}}' data-filter-theme='{{data-filter-theme}}' data-icon='{{data-icon}}' data-inset='{{data-inset}}' data-split-icon='{{data-split-icon}}' data-split-theme='{{data-split-theme}}' data-theme='{{data-theme}}' data-count-theme='{{data-count-theme}}' is="json-listview">
+        <content></content>
+      </ul>
+      <gk-google-sheets id="{{id}}_sheet"></gk-google-sheets>
+    </div>
+  </template>
+
+  <script>
+  function getPageId($ele) {
+    return '#' + $ele.closest('[data-role="page"]').attr('id');
+  }
+
+  function convertSheetData(data) {
+    var ret = [];
+    data.forEach(function(row) {
+      var o = {};
+      Object.keys(row).forEach(function(key) {
+        if (key.indexOf('gsx$') === 0) {
+          o[key.substr(4)] = row[key]['$t'];
+        }
+      });
+      ret.push(o);
+    });
+    return ret;
+  }
+
+  registerElement('google-sheets-listview', {
+
+    $sheet: null,
+
+    init: function() {
+      var self = this,
+        $ele = self.$ele;
+      $(document).on('pageinit', getPageId($ele), function() {
+        var $list = $ele.find('#' + self.id + '_list'),
+          $sheet = $ele.find('#' + self.id + '_sheet');
+        $sheet.on('data', function() {
+          $list.gk('model', convertSheetData($sheet.gk().rows));
+          $list.show();
+        });
+        $list.hide();
+        self.$sheet = $sheet;
+        self.refresh();
+      });
+    },
+
+    refresh: function() {
+      this.$sheet.attr('key', this.$ele.attr('key')).gk('refresh');
+    }
+
+  });
+  </script>
+
+</element>

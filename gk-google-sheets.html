@@ -1,0 +1,50 @@
+<link rel="import" href="gk-ajax.html">
+
+<element name="gk-google-sheets">
+
+  <template>
+    <div id="{{id}}" key="{{key}}">
+      <content></content>
+      <gk-ajax id="{{id}}_ajax" handleAs="json"></gk-ajax>
+    </div>
+  </template>
+
+  <script>
+  function getUrl($ele) {
+    var key = $ele.attr('key'),
+      worksheetId = 1;
+    return key ? ('https://spreadsheets.google.com/feeds/list/' + key + '/' + worksheetId + '/public/full?alt=json&callback=?') : '';
+  }
+
+  function getRows(rawData) {
+    return (rawData && rawData.feed) ? rawData.feed.entry : [];
+  }
+
+  registerElement('gk-google-sheets', {
+
+    $ajax: null,
+
+    rows: [],
+
+    init: function() {
+      var self = this,
+        $ele = self.$ele,
+        $ajax = $ele.find('#' + self.id + '_ajax');
+      $ajax.on('response', function() {
+        $ele.triggerHandler('data', [self.rows = getRows($ajax.gk().response)]);
+      });
+      self.$ajax = $ajax;
+      self.refresh();
+    },
+
+    refresh: function() {
+      var url = getUrl(this.$ele);
+      if (url) {
+        this.$ajax.attr('url', url).gk('go');
+      }
+    }
+
+  });
+  </script>
+
+</element>
