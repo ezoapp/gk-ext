@@ -3,14 +3,14 @@
 <element name="google-sheets-table">
 
   <template>
-    <div id="{{id}}" key="{{key}}" border="{{border}}">
+    <div id="{{id}}" border="{{border}}">
       <table id="{{id}}_table" class="{{class}}" style="{{style}}" data-role="table" data-mode="columntoggle">
         <thead>
           <tr></tr>
         </thead>
         <tbody></tbody>
       </table>
-      <gk-google-sheets id="{{id}}_sheet"></gk-google-sheets>
+      <gk-google-sheets id="{{id}}_sheet" key="{{key}}" headers="{{headers}}" gid="{{gid}}" range="{{range}}" query="{{query}}"></gk-google-sheets>
     </div>
   </template>
 
@@ -19,18 +19,20 @@
     return '#' + $ele.closest('[data-role="page"]').attr('id');
   }
 
-  function convertSheetData(data) {
-    var ret = [];
-    data.forEach(function(entry) {
-      var o = {};
-      Object.keys(entry).forEach(function(key) {
-        if (key.indexOf('gsx$') === 0) {
-          o[key.substr(4)] = entry[key]['$t'];
-        }
+  function convertSheetData(table) {
+    var cellVal = function(cell) {
+        return cell ? ('f' in cell ? cell.f : cell.v) : "";
+      },
+      cols = $.map(table.cols, function(col) {
+        return col.label || col.id;
       });
-      ret.push(o);
+    return $.map(table.rows, function(row) {
+      var o = {};
+      row.c.forEach(function(cell, idx) {
+        o[cols[idx]] = cellVal(cell);
+      });
+      return o;
     });
-    return ret;
   }
 
   registerElement('google-sheets-table', {
@@ -46,8 +48,8 @@
         var $table = $ele.find('#' + self.id + '_table'),
           $sheet = $ele.find('#' + self.id + '_sheet');
 
-        $sheet.on('data', function() {
-          var tableData = convertSheetData($sheet.gk().rows);
+        $sheet.on('data', function(e, table) {
+          var tableData = convertSheetData(table);
 
           var th = [];
           var thNum = 0;
@@ -97,7 +99,7 @@
     },
 
     refresh: function() {
-      this.$sheet.attr('key', this.$ele.attr('key')).gk('refresh');
+      this.$sheet.gk('refresh');
     }
 
   });

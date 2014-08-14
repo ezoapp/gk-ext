@@ -4,11 +4,11 @@
 <element name='google-sheets-listview'>
 
   <template>
-    <div id="{{id}}" key="{{key}}">
+    <div id="{{id}}">
       <ul id='{{id}}_list' data-role='listview' repeat='{{repeat}}' style='{{style}}' data-autodividers='{{data-autodividers}}' data-divider-theme='{{data-divider-theme}}' data-filter-reveal='{{data-filter-reveal}}' data-filter='{{data-filter}}' data-filter-placeholder='{{data-filter-placeholder}}' data-filter-theme='{{data-filter-theme}}' data-icon='{{data-icon}}' data-inset='{{data-inset}}' data-split-icon='{{data-split-icon}}' data-split-theme='{{data-split-theme}}' data-theme='{{data-theme}}' data-count-theme='{{data-count-theme}}' is="json-listview">
         <content></content>
       </ul>
-      <gk-google-sheets id="{{id}}_sheet"></gk-google-sheets>
+      <gk-google-sheets id="{{id}}_sheet" key="{{key}}" headers="{{headers}}" gid="{{gid}}" range="{{range}}" query="{{query}}"></gk-google-sheets>
     </div>
   </template>
 
@@ -17,18 +17,20 @@
     return '#' + $ele.closest('[data-role="page"]').attr('id');
   }
 
-  function convertSheetData(data) {
-    var ret = [];
-    data.forEach(function(row) {
-      var o = {};
-      Object.keys(row).forEach(function(key) {
-        if (key.indexOf('gsx$') === 0) {
-          o[key.substr(4)] = row[key]['$t'];
-        }
+  function convertSheetData(table) {
+    var cellVal = function(cell) {
+        return cell ? ('f' in cell ? cell.f : cell.v) : "";
+      },
+      cols = $.map(table.cols, function(col) {
+        return col.label || col.id;
       });
-      ret.push(o);
+    return $.map(table.rows, function(row) {
+      var o = {};
+      row.c.forEach(function(cell, idx) {
+        o[cols[idx]] = cellVal(cell);
+      });
+      return o;
     });
-    return ret;
   }
 
   registerElement('google-sheets-listview', {
@@ -41,8 +43,8 @@
       $(document).on('pageinit', getPageId($ele), function() {
         var $list = $ele.find('#' + self.id + '_list'),
           $sheet = $ele.find('#' + self.id + '_sheet');
-        $sheet.on('data', function() {
-          $list.gk('model', convertSheetData($sheet.gk().rows));
+        $sheet.on('data', function(e, table) {
+          $list.gk('model', convertSheetData(table));
           $list.show();
         });
         $list.hide();
@@ -52,7 +54,7 @@
     },
 
     refresh: function() {
-      this.$sheet.attr('key', this.$ele.attr('key')).gk('refresh');
+      this.$sheet.gk('refresh');
     }
 
   });

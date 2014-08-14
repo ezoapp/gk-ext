@@ -3,45 +3,67 @@
 <element name="gk-google-sheets">
 
   <template>
-    <div id="{{id}}" key="{{key}}">
-      <content></content>
-      <gk-ajax id="{{id}}_ajax" handleAs="json"></gk-ajax>
+    <div id="{{id}}" key="{{key}}" headers="{{headers}}" gid="{{gid}}" range="{{range}}" tq="{{query}}">
+      <gk-ajax id="{{id}}_ajax" handleAs="script" auto="{{auto}}"></gk-ajax>
     </div>
   </template>
 
   <script>
-  function getUrl($ele) {
-    var key = $ele.attr('key'),
-      worksheetId = 1;
-    return key ? ('https://spreadsheets.google.com/feeds/list/' + key + '/' + worksheetId + '/public/full?alt=json&callback=?') : '';
+  function makeAjax(key, $ele) {
+    var $ajax = $ele.find('#' + $ele.attr('id') + '_ajax'),
+      queryData = {};
+    ['headers', 'gid', 'range', 'tq'].forEach(function(attr) {
+      queryData[attr] = $ele.attr(attr);
+    });
+    queryData.tqx = 'responseHandler:' + makeCallback($ele);
+    queryData.pli = 1;
+    if (key.substr(0, 1) === '0') {
+      $ajax.attr('url', 'https://spreadsheets.google.com/tq');
+      queryData.key = key;
+    } else {
+      $ajax.attr('url', 'https://docs.google.com/spreadsheets/d/' + key + '/gviz/tq');
+    }
+    $ajax.attr('data', JSON.stringify(queryData));
+    return $ajax;
   }
 
-  function getRows(rawData) {
-    return (rawData && rawData.feed) ? rawData.feed.entry : [];
+  function makeCallback($ele) {
+    var id = 'ggs' + new Date().getTime();
+    window[id] = function(resp) {
+      $.extend($ele.gk(), resp);
+      handleResponse($ele, resp);
+      delete window[id];
+    };
+    return id;
+  }
+
+  function handleResponse($ele, resp) {
+    switch (resp.status) {
+      case 'ok':
+        $ele.trigger('data', [resp.table]);
+        break;
+      case 'warning':
+        $ele.trigger('data', [resp.table, resp.warnings]);
+        break;
+      case 'error':
+        $ele.trigger('error', [resp.errors]);
+        break;
+      default:
+        break;
+    }
   }
 
   registerElement('gk-google-sheets', {
 
     $ajax: null,
 
-    rows: [],
-
     init: function() {
-      var self = this,
-        $ele = self.$ele,
-        $ajax = $ele.find('#' + self.id + '_ajax');
-      $ajax.on('response', function() {
-        $ele.triggerHandler('data', [self.rows = getRows($ajax.gk().response)]);
-      });
-      self.$ajax = $ajax;
-      self.refresh();
+      this.refresh();
     },
 
     refresh: function() {
-      var url = getUrl(this.$ele);
-      if (url) {
-        this.$ajax.attr('url', url).gk('go');
-      }
+      var key = this.$ele.attr('key');
+      key && makeAjax(key, this.$ele).gk('go');
     }
 
   });
