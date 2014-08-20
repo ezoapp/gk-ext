@@ -9,13 +9,23 @@
   </template>
 
   <script>
+  var ajaxCount = 0,
+    utils = require('./js/utils'),
+    properties = ['key', 'headers', 'gid', 'range', {
+      'query': 'tq'
+    }];
+
+  function getPageId($ele) {
+    return '#' + $ele.closest('[data-role="page"]').attr('id');
+  }
+
   function makeAjax(key, $ele) {
     var $ajax = $ele.find('#' + $ele.attr('id') + '_ajax'),
       queryData = {};
     ['headers', 'gid', 'range', 'tq'].forEach(function(attr) {
       queryData[attr] = $ele.attr(attr);
     });
-    queryData.tqx = 'responseHandler:' + makeCallback($ele);
+    queryData.tqx = 'responseHandler:' + makeCallback($ele, 'ggs_ajax' + ajaxCount++);
     queryData.pli = 1;
     if (key.substr(0, 1) === '0') {
       $ajax.attr('url', 'https://spreadsheets.google.com/tq');
@@ -27,9 +37,8 @@
     return $ajax;
   }
 
-  function makeCallback($ele) {
-    var id = 'ggs' + new Date().getTime();
-    window[id] = function(resp) {
+  function makeCallback($ele, id) {
+    window[id] = window[id] || function(resp) {
       $.extend($ele.gk(), resp);
       handleResponse($ele, resp);
       delete window[id];
@@ -55,15 +64,29 @@
 
   registerElement('gk-google-sheets', {
 
-    $ajax: null,
-
     init: function() {
-      this.refresh();
+      var self = this;
+      utils.exposeProperties(properties, self,
+        function(attr) {
+          return self.$ele.attr(attr);
+        },
+        function(attr, val) {
+          self.$ele.attr(attr, val);
+        }
+      );
+      if ($.mobile) {
+        $(document).on('pageinit', getPageId(self.$ele), function() {
+          self.refresh();
+        });
+      } else {
+        $(document).on('gkComponentsReady', function() {
+          self.refresh();
+        });
+      }
     },
 
     refresh: function() {
-      var key = this.$ele.attr('key');
-      key && makeAjax(key, this.$ele).gk('go');
+      this.key && makeAjax(this.key, this.$ele).gk('go');
     }
 
   });

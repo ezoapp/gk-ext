@@ -4,20 +4,14 @@
 
   <template>
     <div id="{{id}}" border="{{border}}">
-      <table id="{{id}}_table" class="{{class}}" style="{{style}}" data-role="table" data-mode="columntoggle">
-        <thead>
-          <tr></tr>
-        </thead>
-        <tbody></tbody>
-      </table>
+      <table id="{{id}}_table" class="{{class}}" style="{{style}}" data-role="table" data-mode="columntoggle"></table>
       <gk-google-sheets id="{{id}}_sheet" key="{{key}}" headers="{{headers}}" gid="{{gid}}" range="{{range}}" query="{{query}}"></gk-google-sheets>
     </div>
   </template>
 
   <script>
-  function getPageId($ele) {
-    return '#' + $ele.closest('[data-role="page"]').attr('id');
-  }
+  var utils = require('./js/utils'),
+    properties = ['key', 'headers', 'gid', 'range', 'query'];
 
   function convertSheetData(table) {
     var cellVal = function(cell) {
@@ -37,57 +31,54 @@
 
   registerElement('google-sheets-table', {
 
-    $sheet: null,
-
     init: function() {
       var self = this,
-        $ele = self.$ele;
+        $ele = self.$ele,
+        $table = $ele.find('#' + self.id + '_table'),
+        $sheet = $ele.find('#' + self.id + '_sheet');
 
-      $(document).on('pageinit', getPageId($ele), function() {
+      utils.exposeProperties(properties, self,
+        function(attr) {
+          return $sheet.gk()[attr];
+        },
+        function(attr, val) {
+          $sheet.gk()[attr] = val;
+        }
+      );
 
-        var $table = $ele.find('#' + self.id + '_table'),
-          $sheet = $ele.find('#' + self.id + '_sheet');
+      $sheet.on('data', function(e, table) {
+        var tableData = convertSheetData(table),
+          th = [],
+          thNum = 0;
 
-        $sheet.on('data', function(e, table) {
-          var tableData = convertSheetData(table);
+        for (var key in tableData[0]) {
+          th[thNum] = key;
+          thNum = thNum + 1;
+        }
+        $table.html('<thead><tr></tr></thead><tbody></tbody>');
+        for (var k = 0; k < th.length; k++) {
+          $table.find('thead tr').append(
+            '<th data-priority="critical">' + th[k] + '</th>'
+          );
+        }
+        for (var i = 0; i < tableData.length; i++) {
+          $table.find('tbody').append(
+            '<tr>' + tableContent(i, th, tableData) + '</tr>'
+          );
+        }
 
-          var th = [];
-          var thNum = 0;
-
-          for (var key in tableData[0]) {
-            th[thNum] = key;
-            thNum = thNum + 1;
-          }
-
-          for (var k = 0; k < th.length; k++) {
-            $table.find('thead tr').append(
-              '<th data-priority="critical">' + th[k] + '</th>'
-            );
-          }
-
-          for (var i = 0; i < tableData.length; i++) {
-            $table.find('tbody').append(
-              '<tr>' + tableContent(i, th, tableData) + '</tr>'
-            );
-          }
-
-          $table.css({
-            'width': '100%'
-          });
-          $table.find('th,td').css({
-            'border': '1px solid #ccc',
-            'text-align': 'left',
-            'text-shadow': 'none',
-            'font-size': '13px'
-          });
-
-          $table.table("refresh");
-
+        $table.css({
+          'width': '100%'
         });
-        self.$sheet = $sheet;
-        self.refresh();
-      });
+        $table.find('th,td').css({
+          'border': '1px solid #ccc',
+          'text-align': 'left',
+          'text-shadow': 'none',
+          'font-size': '13px'
+        });
 
+        $table.table("refresh");
+      });
 
       function tableContent(p, q, r) {
         var a;
@@ -99,7 +90,7 @@
     },
 
     refresh: function() {
-      this.$sheet.gk('refresh');
+      this.$ele.find('#' + this.id + '_sheet').gk('refresh');
     }
 
   });

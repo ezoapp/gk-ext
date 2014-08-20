@@ -13,9 +13,8 @@
   </template>
 
   <script>
-  function getPageId($ele) {
-    return '#' + $ele.closest('[data-role="page"]').attr('id');
-  }
+  var utils = require('./js/utils'),
+    properties = ['key', 'headers', 'gid', 'range', 'query'];
 
   function convertSheetData(table) {
     var cellVal = function(cell) {
@@ -35,26 +34,33 @@
 
   registerElement('google-sheets-listview', {
 
-    $sheet: null,
-
     init: function() {
       var self = this,
-        $ele = self.$ele;
-      $(document).on('pageinit', getPageId($ele), function() {
-        var $list = $ele.find('#' + self.id + '_list'),
-          $sheet = $ele.find('#' + self.id + '_sheet');
-        $sheet.on('data', function(e, table) {
-          $list.gk('model', convertSheetData(table));
-          $list.show();
-        });
+        $ele = self.$ele,
+        $list = $ele.find('#' + self.id + '_list'),
+        $sheet = $ele.find('#' + self.id + '_sheet');
+
+      utils.exposeProperties(properties, self,
+        function(attr) {
+          return $sheet.gk()[attr];
+        },
+        function(attr, val) {
+          $sheet.gk()[attr] = val;
+        }
+      );
+
+      $sheet.on('data', function(e, table) {
+        $list.gk('model', convertSheetData(table));
+        $list.show();
+      });
+
+      $(document).on('gkComponentsReady', function() {
         $list.hide();
-        self.$sheet = $sheet;
-        self.refresh();
       });
     },
 
     refresh: function() {
-      this.$sheet.gk('refresh');
+      this.$ele.find('#' + this.id + '_sheet').gk('refresh');
     }
 
   });

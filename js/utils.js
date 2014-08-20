@@ -60,6 +60,28 @@ define(function () {
       thisObj.$ele = $newEle;
 
       return thisObj;
+    },
+
+    exposeProperties: function (props, inst, getter, setter) {
+      var defineProperty = function (inst, prop, src) {
+        Object.defineProperty(inst, prop, {
+          get: function () {
+            return getter(src || prop);
+          },
+          set: function (val) {
+            setter(src || prop, val);
+          }
+        });
+      };
+      props.forEach(function (prop) {
+        if (typeof prop === 'string') {
+          defineProperty(inst, prop);
+        } else {
+          $.each(prop, function (key, val) {
+            defineProperty(inst, key, val);
+          });
+        }
+      });
     }
   }
 });

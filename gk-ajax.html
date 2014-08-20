@@ -5,6 +5,13 @@
   </template>
 
   <script>
+  var utils = require('./js/utils'),
+    properties = ['url', 'data', 'headers', 'contentType', 'withCredentials', 'auto', {
+      'handleAs': 'dataType',
+      'method': 'type',
+      'xhrArgs': 'xhrFields'
+    }];
+
   function getAjaxSettings($ele) {
     var settings = {};
     ['url', 'dataType', 'type', 'contentType'].forEach(function(attr) {
@@ -34,9 +41,17 @@
     response: null,
 
     init: function() {
-      var auto = this.$ele.attr('auto');
-      if (typeof auto !== 'undefined' && auto !== 'false') {
-        this.go();
+      var self = this;
+      utils.exposeProperties(properties, self,
+        function(attr) {
+          return self.$ele.attr(attr);
+        },
+        function(attr, val) {
+          self.$ele.attr(attr, val);
+        }
+      );
+      if (typeof self.auto !== 'undefined' && self.auto !== 'false') {
+        self.go();
       }
     },
 
