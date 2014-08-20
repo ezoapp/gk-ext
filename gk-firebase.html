@@ -1,0 +1,60 @@
+<script src="https://cdn.firebase.com/js/client/1.0.19/firebase.js"></script>
+
+<element name="gk-firebase">
+
+  <template>
+    <div id="{{id}}" root="{{root}}"></div>
+  </template>
+
+  <script>
+  var utils = require('./js/utils'),
+    properties = ['root'];
+
+  function getPageId($ele) {
+    return '#' + $ele.closest('[data-role="page"]').attr('id');
+  }
+
+  registerElement('gk-firebase', {
+
+    rootRef: null,
+
+    init: function() {
+      var self = this;
+      utils.exposeProperties(properties, self,
+        function(attr) {
+          return self.$ele.attr(attr);
+        },
+        function(attr, val) {
+          self.$ele.attr(attr, val);
+          if (attr === 'root') {
+            self.rootRef = new Firebase(self.root);
+          }
+        }
+      );
+      if ($.mobile) {
+        $(document).on('pageinit', getPageId(self.$ele), function() {
+          self.rootRef = new Firebase(self.root);
+        });
+      } else {
+        $(document).on('gkComponentsReady', function() {
+          self.rootRef = new Firebase(self.root);
+        });
+      }
+    },
+
+    ref: function(path) {
+      return this.rootRef.child(path);
+    },
+
+    online: function() {
+      Firebase.goOnline();
+    },
+
+    offline: function() {
+      Firebase.goOffline();
+    }
+
+  });
+  </script>
+
+</element>

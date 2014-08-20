@@ -1,0 +1,87 @@
+<link rel="import" href="gk-firebase.html">
+
+<element name="push-message">
+
+  <template>
+    <div id="{{id}}" username="{{username}}">
+      <gk-firebase id="{{id}}_fb" root="https://glowing-fire-4998.firebaseio.com/push_messages"></gk-firebase>
+    </div>
+  </template>
+
+  <script>
+  var utils = require('./js/utils'),
+    properties = ['username'];
+
+  function genId() {
+    return ("" + 1e7 + -1e3 + -4e3 + -8e3 + -1e11).replace(/1|0/g, function() {
+      return (0 | Math.random() * 16).toString(16);
+    });
+  }
+
+  function composeMessage(inst, msgId, msg) {
+    return {
+      user_id: inst.user_id,
+      message_id: msgId,
+      username: inst.username || '',
+      payload: msg || {},
+      timestamp: Firebase.ServerValue.TIMESTAMP
+    };
+  }
+
+  registerElement('push-message', {
+
+    user_id: genId(),
+
+    $firebase: null,
+
+    init: function() {
+      var self = this;
+      self.$firebase = self.$ele.find('#' + self.id + '_fb');
+      utils.exposeProperties(properties, self,
+        function(attr) {
+          return self.$ele.attr(attr);
+        },
+        function(attr, val) {
+          self.$ele.attr(attr, val);
+        }
+      );
+    },
+
+    publish: function(groupId, message) {
+      if (typeof message === 'undefined') {
+        message = groupId;
+        groupId = '*';
+      }
+      var msg = this.$firebase.gk('ref', 'group_messages' + '/' + groupId).push();
+      msg.set(composeMessage(this, msg.name(), message));
+    },
+
+    subscribe: function(groupId, handler) {
+      if (typeof handler === 'undefined') {
+        handler = groupId;
+        groupId = '*';
+      }
+      this.$firebase.gk('ref', 'group_messages' + '/' + groupId).on('child_added', function(snapshot) {
+        handler(snapshot.val());
+      });
+    },
+
+    send: function(username, message) {
+      if (username) {
+        var msg = this.$firebase.gk('ref', 'user_messages' + '/' + username).push();
+        msg.set(composeMessage(this, msg.name(), message));
+      }
+    },
+
+    receive: function(handler) {
+      if (this.username) {
+        this.$firebase.gk('ref', 'user_messages' + '/' + this.username).on('child_added', function(snapshot) {
+          handler(snapshot.val());
+        });
+      }
+    }
+
+  });
+  </script>
+
+</element>
