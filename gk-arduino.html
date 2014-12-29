@@ -1,0 +1,94 @@
+<element name="gk-arduino">
+
+  <template>
+    <div id="{{id}}" device="{{device}}"></div>
+  </template>
+
+  <script>
+  function getBtConnection(device) {
+    return bluetoothSerial;
+  }
+
+  function generateOnError(cause) {
+    return function(err) {
+      this.status = cause + ': ' + JSON.stringify(err);
+      this.$ele.trigger('error', [this.status]);
+    };
+  }
+
+  registerElement('gk-arduino', {
+
+    device: '',
+
+    status: 'disconnected',
+
+    _connection: null,
+
+    _pinMappings: {},
+
+    init: function() {
+      this.device = this.$ele.attr('device');
+      this._connection = getBtConnection(this.device);
+      this._connection.subscribe("\n\n", this._dispatch, generateOnError('Subscribe Failed').bind(this));
+      this.connect();
+    },
+
+    connect: function() {
+      this.status = 'connecting';
+      this._connection.connect(this.device, this._onconnect, this._ondisconnect);
+    },
+
+    _onconnect: function() {
+      this.status = 'connected';
+      this.$ele.trigger('ready', [this.arduino()]);
+    },
+
+    disconnect: function() {
+      this.status = 'disconnecting';
+      this._connection.disconnect(this._ondisconnect);
+    },
+
+    _ondisconnect: function(cause) {
+      this.status = 'disconnected';
+      this.$ele.trigger('disconnect');
+    },
+
+    sendData: function(data) {
+      this._connection.write(data);
+    },
+
+    _dispatch: function(data) {
+      var lines = data.split('\n');
+      if (lines.length === 3) {
+        switch (lines[0]) {
+          case 'digitalRead':
+            var handler = this._pinMappings[lines[1]];
+            if (typeof handler === 'function') {
+              handler.apply(null, lines[2]);
+            }
+            break;
+          default:
+            break;
+        }
+      }
+    },
+
+    arduino: function() {
+      var self = this;
+      return {
+        pinMode: function(pin, mode) {
+          self.sendData('pinMode\n' + pin + '\n' + mode + '\n\n');
+        },
+        digitalWrite: function(pin, value) {
+          self.sendData('digitalWrite\n' + pin + '\n' + value + '\n\n');
+        },
+        digitalRead: function(pin, callback) {
+          self._pinMappings[pin] = callback;
+        }
+      };
+    }
+
+  });
+  </script>
+
+</element>
