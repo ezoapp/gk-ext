@@ -35,7 +35,8 @@
 
     connect: function() {
       this.status = 'connecting';
-      this._connection.connect(this.device, this._onconnect, this._ondisconnect);
+      var self =this;
+      this._connection.connect(this.device, this._onconnect.bind(this) , this._ondisconnect.bind(this));
     },
 
     _onconnect: function() {
