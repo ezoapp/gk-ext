@@ -23,6 +23,8 @@
       var reserveWidth = parseInt(self.$originEle.attr("reserveWidth") || gkConfig.movableMargin, 10);
       var contentPaddingTop = $('#navbar .navbar-collapse').height();
       var contentPaddingBottom = $('#pagePanel_pagesHeader').height();
+      var $maskEle = $('<div class="movable-mask"></div>');
+      var $body = $(document.body);
 
       if (self.$originEle.attr('removebtn') === "true") {
         $removebtn.removeClass("hidden");
@@ -68,9 +70,14 @@
             'top': setTop + "px",
             'left': setLeft + "px"
           });
+
+          if (!$maskEle.is(':visible')) {
+            $body.append($maskEle);
+          }
         }
 
         function moveEnd(evt) {
+          $maskEle.remove();
           self.$window.off("mousemove", moveXY);
         }
       });

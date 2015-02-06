@@ -1,29 +1,66 @@
 <element name='youtube'>
 
   <template>
-    <img id='{{id}}' data-gk-src='{{src}}' width='{{width}}' height='{{height}}' videoId='{{videoId}}'>
-    <content></content>
+    <div id='{{id}}' style="position:relative;width:100%;padding-bottom:65%;">
+      <div style="position:absolute;top:0;bottom:0;right:0;left:0;">
+        <img class='js-youtube' style="width:100%;height:100%;" data-gk-src='{{src}}' width='{{width}}' height='{{height}}' videoId='{{videoId}}'>
+        <content></content>
+      </div>
+    </div>
   </template>
 
   <script>
   registerElement('youtube', {
 
     init: function() {
-      var $ele = this.$ele;
-      var time = $ele.attr('time');
-      var imgSrc = $ele.attr("data-gk-src");
-      if (imgSrc !== "{{src}}") {
-        $ele.attr("src", imgSrc);
-      }
+      var self = this,
+          $ele = this.$ele,
+          $img = this.$ele.find('.js-youtube'),
+          imgSrc = $img.attr("data-gk-src"),
+          re = /\d+\D+/,
+          width = $img.attr('width'),
+          height = $img.attr('height');
 
-      $ele.on('click', function(e) {
-        if (typeof $ele.attr('preview') === 'undefined') {
-          $ele.replaceWith('<iframe id="{{id}}" type="text/html" ' +
-            'width="' + $ele.width() + '" height="' + $ele.height() + '" ' +
-            'src="http://www.youtube.com/embed/' + $ele.attr('videoId') + '?' +
+      if (imgSrc !== "{{src}}") {
+        $img.attr("src", imgSrc);
+      }
+      $ele.on('click', $.proxy(self.__clickHandler, self));
+      if (width) {
+        re.test(width) || (width = width + 'px');
+        $ele.css('width', width)
+      }
+      if (height) {
+        re.test(height) || (height = height + 'px');
+        $ele.css('padding-bottom', height)
+      }
+    },
+
+    clear: function() {
+      var self = this,
+          $img = self.$ele.find('.js-youtube');
+      if (self.iframe) {
+        self.iframe.remove();
+      }
+      $img.show();
+    },
+
+    __clickHandler: function() {
+      var self = this,
+          $img = self.$ele.find('.js-youtube');
+
+      if (typeof $img.attr('preview') === 'undefined') {
+        $img.after('<iframe type="text/html" ' +
+            'style="width:100%;height:100%" ' +
+            'src="http://www.youtube.com/embed/' + $img.attr('videoId') + '?' +
             'autoplay=1&loop=1&rel=0&wmode=transparent" frameborder="0"></iframe>');
-        }
-      });
+
+        self.iframe = $img.next();
+        $img.hide();
+      }
+    },
+
+    destroy: function() {
+      this.$ele.off('click');
     }
 
   });

@@ -104,7 +104,6 @@ div.split-pane-divider.drag {
 .split-pane.vertical-percent > .split-pane-divider {
     position: absolute;
     height: 100%;
-    top: 40px;
     cursor: ew-resize;
     z-index: 2;
 }
