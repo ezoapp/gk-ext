@@ -13,10 +13,51 @@
   </template>
 
   <script>
+  function getPageId($ele) {
+    return '#' + $ele.closest('[data-role="page"]').attr('id');
+  }
+
   registerElement('bxslider', {
 
+    bxSlider: null,
+
     init: function() {
-      //this.$ele.find('ul').bxSlider({mode: 'fade',captions: true});
+      var self = this,
+        pageId;
+
+      if ($.mobile) {
+        pageId = getPageId(self.$ele);
+        $(document).on('pagebeforeshow', pageId, function() {
+          self.hideSlider_();
+        });
+        $(document).on('pageshow', pageId, function() {
+          self.showSlider_();
+        });
+      } else {
+        self.hideSlider_();
+        $(document).on('gkComponentsReady', function() {
+          self.showSlider_();
+        });
+      }
+    },
+
+    hideSlider_: function() {
+      if (this.bxSlider === null) {
+        var $slider = this.$ele.find('.bxslider');
+        if ($slider.length) {
+          $slider.css('visibility', 'hidden');
+        }
+      }
+    },
+
+    showSlider_: function() {
+      if (this.bxSlider === null) {
+        var $slider = this.$ele.find('.bxslider');
+        if ($slider.length) {
+          this.bxSlider = $slider.bxSlider();
+          $slider.css('visibility', 'visible');
+        }
+      }
     }
 
   });
