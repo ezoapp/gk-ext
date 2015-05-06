@@ -1,0 +1,113 @@
+<element name='json-selectmenu'>
+
+  <template>
+    <select id='{{id}}' name='{{name}}' service='{{service}}' disable='{{disable}}' data-corners='{{data-corners}}' data-icon='{{data-icon}}'
+            data-iconpos='{{data-iconpos}}' data-inline='{{data-inline}}' data-mini='{{data-mini}}'
+            data-native-menu='{{data-native-menu}}' data-overlay-theme='{{data-overlay-theme}}'
+            data-placeholder='{{data-placeholder}}' data-theme='{{data-theme}}' data-shadow='{{data-shadow}}'
+            data-iconshadow='{{data-iconshadow}}' data-prevent-focus-zoom='{{data-prevent-focus-zoom}}'>
+      <content></content>
+    </select>
+  </template>
+
+  <script>
+
+    registerElement('json-selectmenu', {
+      init: function () {
+        var self = this,
+            $ele = this.$ele,
+            $page = $ele.closest('[data-role="page"]'),
+            isInited = false;
+        $ele.html(self.$originEle.html());
+        $ele.on("selectmenucreate", function (event, ui) {
+          if ($ele.attr('disable') == 'true') {
+            $ele.selectmenu("disable");
+          }
+        });
+        $ele.on("change", function () {
+          ($.isFunction(self.onChangeCallback)) || (self.onChangeCallback = $.noop);
+          self.onChangeCallback($(this));
+        });
+        $(document.body).on('pagecontainershow', function (event, ui) {
+          if (!isInited && ui.toPage.attr('id') === $page.attr('id')) {
+            self.load();
+            isInited = true;
+          }
+        });
+      },
+
+      value: function (val) {
+        if (val !== undefined) {
+          return this.$ele.val(val).selectmenu('refresh');
+        } else {
+          return this.$ele.val();
+        }
+      },
+
+      enable: function () {
+        this.$ele.selectmenu("enable");
+      },
+
+      disable: function () {
+        this.$ele.selectmenu("disable");
+      },
+
+      open: function () {
+        this.$ele.selectmenu("open");
+      },
+
+      close: function () {
+        this.$ele.selectmenu("close");
+      },
+
+      refresh: function (option) {
+        this.$ele.selectmenu("refresh", option);
+      },
+
+      model: function (model) {
+        var self = this,
+            $ele = self.$ele,
+            template = self.$originEle.html();
+        $ele.children().remove();
+        $(model).each(function (idx, obj) {
+          var tmp = template;
+          for (var key in obj) {
+            if (obj.hasOwnProperty(key)) {
+              var prop = $.trim(key),
+                  regex = new RegExp('{{' + prop + '}}|\\${' + prop + '}', "gi");
+              tmp = tmp.replace(regex, $.trim(obj[prop]));
+            }
+          }
+          $ele.append(tmp);
+        });
+        self.refresh();
+      },
+
+      service: function (service) {
+        var self = this,
+            $ele = self.$ele;
+        if (service) {
+          $ele.attr('service', service);
+        } else {
+          return $ele.attr('service');
+        }
+      },
+      
+      load: function (service) {
+        var self = this,
+            url = (self.service(service)) ? self.service() : service;
+        $.getJSON(url).complete(function (data) {
+          self.model($.parseJSON(data.responseText));
+        });
+      },
+
+      onChange: function (callback) {
+        if ($.isFunction(callback)) {
+          this.onChangeCallback = callback;
+        }
+      }
+    });
+
+  </script>
+
+</element>
