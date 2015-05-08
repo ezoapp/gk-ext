@@ -1,0 +1,83 @@
+<element name='face-detection'>
+  <template>
+    <div id='{{id}}'>
+      <a id='{{id}}_btn' class='ui-btn'>Check</a>
+      <div id='{{id}}_content' style="position:relative">
+        <img id='{{id}}_img'>
+      </div>
+    </div>
+  </template>
+  <script>
+  registerElement('face-detection', {
+    init: function() {
+      var face = new FaceDetection(this);
+      face.init();
+    }
+  });
+
+  function FaceDetection(instance) {
+    'use strict';
+
+    var self = instance,
+      $ele = self.$ele,
+      id = $ele.attr('id'),
+      $btn = $('#' + id + '_btn'),
+      $content = $('#' + id + '_content'),
+      $img = $('#' + id + '_img');
+
+    var params = {
+      'subscription-key': $ele.attr('subscriptionKey') || '4c3802ed313946348745a62c9fd5f814',
+      'analyzesFaceLandmarks': $ele.attr('analyzesFaceLandmarks') || 'false',
+      'analyzesAge': $ele.attr('analyzesAge') || 'false',
+      'analyzesGender': $ele.attr('analyzesGender') || 'false',
+      'analyzesHeadPose': $ele.attr('analyzesHeadPose') || 'false'
+    };
+
+    this.init = self.init = function() {
+      var src = $ele.attr('src'),
+        alt = $ele.attr('alt');
+
+      if (src) {
+        $img.attr('src', src);
+      }
+
+      if (alt) {
+        $img.attr('alt', alt);
+      }
+
+      $btn.click(function() {
+        $btn.addClass('ui-state-disabled');
+        $('.face', $content).remove();
+
+        self.detect(src).done(function(data) {
+          for (var i = 0; i < data.length; i++) {
+            var obj = data[i];
+            $('<div class="face" style="position: absolute;border: #0000FF 2px solid"><div style="position: relative;top:-20px;color: red;width: 100px;">' + (obj.attributes.age || '') + ' ' + (obj.attributes.gender || '') + '</div></div>').css({
+              width: obj.faceRectangle.width,
+              height: obj.faceRectangle.height,
+              top: obj.faceRectangle.top,
+              left: obj.faceRectangle.left
+            }).appendTo($content);
+          }
+        }).always(function() {
+          $btn.removeClass('ui-state-disabled');
+        });
+
+      });
+
+    };
+
+    self.detect = function(url) {
+      return $.ajax({
+        url: 'https://api.projectoxford.ai/face/v0/detections?' + $.param(params),
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({
+          url: url
+        })
+      });
+    };
+
+  }
+  </script>
+</element>
