@@ -24,7 +24,7 @@
         var self = this,
             $ele = self.$ele,
             $page = $ele.closest('[data-role="page"]'),
-            api = 'https://maps.google.com/maps/api/js?' +
+            api = 'http://maps.google.com/maps/api/js?' +
                 ($ele.attr('sensor') === 'true' ? 'sensor=true' : 'sensor=false') +
                 ($ele.attr('key') ? '&key=' + $ele.attr('key') : '') +
                 '&callback=gmapReady',
@@ -43,7 +43,7 @@
         $(document).one('gmapReady', function () {
           if ($page.length && !$page.hasClass('ui-page-active')) {
             $(document.body).on('pagecontainershow', function (event, ui) {
-              if (!self.map && ui.toPage.attr('id') === $page.attr('id')) {
+              if (!self.gmap && ui.toPage.attr('id') === $page.attr('id')) {
                 initialize();
               }
             });
@@ -79,13 +79,13 @@
         }
 
         function setMap() {
-          if (self.map) {
-            self.map.setZoom(parseInt(self.options['zoom'], 10));
-            self.map.setCenter(self.options['center']);
+          if (self.gmap) {
+            self.gmap.setZoom(parseInt(self.options['zoom'], 10));
+            self.gmap.setCenter(self.options['center']);
           } else {
-            self.map = new google.maps.Map($ele[0], self.options);
+            self.gmap = new google.maps.Map($ele[0], self.options);
             // add markers
-            if ($.isPlainObject(self.markers)) {
+            if (typeof self.markers === 'object') {
               Object.keys(self.markers).forEach(function (loc) {
                 var marker = self.markers[loc];
                 if (!marker.map) {
@@ -94,7 +94,7 @@
               });
             }
             // bind clickCallbacks
-            if ($.isArray(self.clickCallbacks)) {
+            if (typeof self.clickCallbacks === 'array') {
               self.clickCallbacks.forEach(function (callback) {
                 self.onclick(callback);
               });
@@ -108,7 +108,7 @@
             }
             $(document.body).on('pagecontainershow', function (event, ui) {
               if (ui.toPage.attr('id') === $page.attr('id')) {
-                google.maps.event.trigger(self.map, 'resize');
+                google.maps.event.trigger(self.gmap, 'resize');
               }
             });
           }
@@ -154,15 +154,15 @@
         var self = this,
             markerTitle = (title) ? title : self.markerTitle(),
             markerIcon = (icon) ? icon : self.markerIcon(),
-            markerVisible = ($.type(visible) === 'boolean') ? visible : self.markerVisible(),
-            iconOption = ($.type(markerIcon) !== 'string') ? undefined : {
+            markerVisible = (typeof visible === 'boolean') ? visible : self.markerVisible(),
+            iconOption = (typeof markerIcon !== 'string') ? undefined : {
               url: markerIcon,
               scaledSize: new google.maps.Size(40, 40)
             };
-        ($.type(markerVisible) !== 'boolean') && (markerVisible = true);
-        ($.isPlainObject(self.markers)) || (self.markers = {});
+        (typeof markerVisible !== 'boolean') && (markerVisible = true);
+        (typeof self.markers === 'object') || (self.markers = {});
         if ($.trim(location) && (!self.markers[location] || !self.markers[location].map)) {
-          if (self.map) {
+          if (self.gmap) {
             if (location.match(/^(\d+\.?\d*)(\s*[,\s]\s*)(\d+\.?\d*)$/)) {
               setMarker(new google.maps.LatLng(parseFloat(RegExp.$1, 10), parseFloat(RegExp.$3, 10)));
             } else {
@@ -182,7 +182,7 @@
 
         function setMarker(latlng) {
           var marker = new google.maps.Marker({
-            map: self.map,
+            map: self.gmap,
             position: latlng,
             title: markerTitle,
             visible: markerVisible,
@@ -212,8 +212,8 @@
       markerTitle: function (title) {
         var self = this,
             $ele = self.$ele;
-        if ($.type(title) === 'string') {
-          if ($.isPlainObject(self.markers)) {
+        if (typeof title === 'string') {
+          if (typeof self.markers === 'object') {
             Object.keys(self.markers).forEach(function (loc) {
               (self.markers[loc]) && (self.markers[loc].setTitle(title));
             });
@@ -227,8 +227,8 @@
       markerIcon: function (icon) {
         var self = this,
             $ele = self.$ele;
-        if ($.type(icon) === 'string') {
-          if ($.isPlainObject(self.markers)) {
+        if (typeof icon === 'string') {
+          if (typeof self.markers === 'object') {
             Object.keys(self.markers).forEach(function (loc) {
               (self.markers[loc]) && (self.markers[loc].setIcon({
                 url: icon,
@@ -245,8 +245,8 @@
       markerVisible: function (visible) {
         var self = this,
             $ele = self.$ele;
-        if ($.type(visible) === 'boolean') {
-          if ($.isPlainObject(self.markers)) {
+        if (typeof visible === 'boolean') {
+          if (typeof self.markers === 'object') {
             Object.keys(self.markers).forEach(function (loc) {
               (self.markers[loc]) && (self.markers[loc].setVisible(visible));
             });
@@ -260,15 +260,15 @@
       onclick: function (callback) {
         var self = this;
         if (typeof callback === 'function') {
-          if (self.map) {
-            google.maps.event.addListener(self.map, 'click', function (event) {
+          if (self.gmap) {
+            google.maps.event.addListener(self.gmap, 'click', function (event) {
               callback({
                 lat: event.latLng.lat(),
                 lng: event.latLng.lng()
               });
             });
           } else {
-            ($.isArray(self.clickCallbacks)) || (self.clickCallbacks = []);
+            (typeof self.clickCallbacks === 'array') || (self.clickCallbacks = []);
             self.clickCallbacks.push(callback);
           }
         }
@@ -277,7 +277,7 @@
       height: function (h) {
         if (h) {
           this.$ele.height(h);
-          google.maps.event.trigger(this.map, "resize");
+          google.maps.event.trigger(this.gmap, "resize");
         } else {
           return this.$ele.height();
         }
@@ -286,7 +286,7 @@
       width: function (w) {
         if (w) {
           this.$ele.width(w);
-          google.maps.event.trigger(this.map, "resize");
+          google.maps.event.trigger(this.gmap, "resize");
         } else {
           return this.$ele.width();
         }
@@ -294,15 +294,23 @@
 
       zoom: function (zoom) {
         if (zoom) {
-          if (this.map) {
+          if (this.gmap) {
             this.options['zoom'] = zoom;
-            this.map.setZoom(parseInt(this.options['zoom'], 10));
-            this.map.setCenter(this.options['center']);
+            this.gmap.setZoom(parseInt(this.options['zoom'], 10));
+            this.gmap.setCenter(this.options['center']);
           } else {
             this.$ele.attr('zoom', zoom);
           }
         } else {
-          return this.map.zoom;
+          return this.gmap.zoom;
+        }
+      },
+      
+      map: function (map) {
+        if (typeof map === 'object') {
+          this.gmap = map;
+        } else {
+          return this.gmap;
         }
       }
 
