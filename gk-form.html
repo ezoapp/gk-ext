@@ -1,0 +1,128 @@
+<script src='../jquery-validation/dist/jquery.validate.min.js'></script>
+<element name='gk-form'>
+  <template>
+    <link rel='stylesheet' href='gk-form/gk-form.css'>
+    <form id='{{id}}'>
+      <content></content>
+    </form>
+  </template>
+  <script>
+  registerElement('gk-form', {
+    init: function() {
+      var gkform = new GKForm(this);
+      gkform.init();
+    }
+  });
+
+  function GKForm(instance) {
+    'use strict';
+
+    var self = instance,
+      $ele = self.$ele,
+      id = $ele.attr('id');
+
+    var defaults = {
+      errorPlacement: function(error, element) {
+        if (element[0].tagName === 'TEXTAREA') {
+          error.insertAfter(element);
+        } else {
+          error.insertAfter(element.parent());
+        }
+      }
+    };
+
+    this.init = self.init = function() {
+      $ele.validate(defaults);
+    };
+
+    self.info = function(data) {
+      var key;
+      // 設值
+      if (data && $.isPlainObject(data)) {
+        $(':input', $ele).each(function(index, element) {
+          key = element.name || element.id;
+          // 傳進來的資料有此 key 才去處理
+          if (data.hasOwnProperty(key)) {
+            var value = data[key],
+              $element = $(element),
+              role = $element.data('role');
+
+            switch (element.type) {
+              case 'radio':
+              case 'checkbox':
+                if (element.type === 'radio' || role === 'flipswitch') {
+                  $element.prop('checked', element.value === value);
+                } else {
+                  $element.prop('checked', ($.isArray(value) && $.inArray(element.value, value) !== -1));
+                }
+                break;
+              default:
+                element.value = value;
+                break;
+            }
+
+            if (element.tagName === 'TEXTAREA') {
+              $element.textinput('refresh');
+            }
+
+            if (element.type === 'radio' || (element.type === 'checkbox' && role !== 'flipswitch')) {
+              $element.checkboxradio('refresh');
+            }
+
+            if ($element.parent().hasClass('ui-slider')) {
+              $element.slider('refresh');
+            }
+
+            if (role === 'flipswitch') {
+              $element.flipswitch('refresh');
+            }
+          }
+        });
+      } else {
+        // 取值
+        var info = {};
+        $(':input', $ele).each(function(index, element) {
+          key = element.name || element.id;
+          var $element = $(element);
+
+          switch (element.type) {
+            case 'radio':
+              // 給 radio 預設空字串的值
+              if (!info.hasOwnProperty(key)) {
+                info[key] = '';
+              }
+
+              if ($element.is(':checked')) {
+                info[key] = element.value;
+              }
+              break;
+            case 'checkbox':
+              if ($element.data('role') === 'flipswitch') {
+                info[key] = $element.is(':checked') ? element.value : '';
+              } else {
+                // 給 checkbox 預設空陣列的值
+                if (!info.hasOwnProperty(key)) {
+                  info[key] = [];
+                }
+
+                if ($element.is(':checked')) {
+                  info[key].push(element.value);
+                }
+              }
+              break;
+            default:
+              info[key] = element.value;
+              break;
+          }
+        });
+        return info;
+      }
+    };
+
+    self.valid = function() {
+      return $ele.valid();
+    };
+
+  }
+  </script>
+</element>

@@ -15,7 +15,8 @@
         "raty": "master",
         "jquery.gk": "master",
         "jquery.qrcode": "master",
-        "jquery-simpleweather": "master"
+        "jquery-simpleweather": "master",
+        "jquery-validation": "1.13.0"
     },
     "devDependencies": {
         "gk-loader": "master"

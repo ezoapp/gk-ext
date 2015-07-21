@@ -1,0 +1,20 @@
+form label.error {
+  color: red;
+  margin-top: 0.5em;
+  width: 100%;
+  float: none;
+}
+
+@media screen and (orientation: portrait) {
+  form label.error {
+    margin-left: 0;
+    display: block;
+  }
+}
+
+@media screen and (orientation: landscape) {
+  form label.error {
+    display: inline-block;
+    margin-left: 22%;
+  }
+}
