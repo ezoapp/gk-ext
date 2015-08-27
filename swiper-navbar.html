@@ -1,0 +1,106 @@
+<script src='../swiper/dist/js/swiper.js'></script>
+
+<element name='swiper-navbar'>
+  <template>
+    <link rel='stylesheet' href='../swiper/dist/css/swiper.css'>
+    <link rel='stylesheet' href='swiper-navbar/swiper-navbar.css'>
+    <div id='{{id}}' style='{{style}}' data-display-name='{{data-display-name}}' data-slides-per-view='{{data-slides-per-view}}' class='swiper-container'>
+      <div class='swiper-wrapper'>
+        <content></content>
+      </div>
+    </div>
+  </template>
+  <script>
+  registerElement('swiper-navbar', {
+    init: function() {
+      var swiperNavBar = new SwiperNavBar(this);
+      swiperNavBar.init();
+    }
+  });
+
+  function SwiperNavBar(instance) {
+    'use strict';
+
+    var self = instance,
+      $ele = self.$ele,
+      $page = $ele.closest('[data-role="page"]'),
+      displayName = $ele.data('displayName'),
+      swiper,
+      onSlideClickCallback = [];
+
+    var settings = {
+      slidesPerView: $ele.data('slidesPerView') ? +$ele.data('slidesPerView') : 'auto',
+      slideToClickedSlide: true
+    };
+
+    this.init = self.init = function() {
+      if ($page.length) {
+        $page.one('pageshow', function() {
+          _initialize();
+        });
+      } else {
+        _initialize();
+      }
+    };
+
+    self.swiper = function() {
+      return swiper;
+    };
+
+    self.onSlideClick = function(callback) {
+      onSlideClickCallback.push(callback);
+    };
+
+    self.appendSlide = function(data, removeAll) {
+      if (removeAll) {
+        swiper.removeAllSlides();
+      }
+
+      for (var i = 0; i < data.length; i++) {
+        var text, $slide;
+        if (displayName) {
+          text = data[i][displayName];
+        } else {
+          text = data[i];
+        }
+
+        $slide = $('<div class="swiper-slide"><div class="swiper-navbar-slide">' + text + '</div></div>').data('slide-data', data[i]);
+        swiper.appendSlide($slide);
+      }
+    };
+
+    self.slideTo = function(index, speed, runCallbacks) {
+      var slide = swiper.slides[index],
+        $slide = $(slide);
+
+      swiper.clickedIndex = index;
+      swiper.clickedSlide = slide;
+      _setCurrentActiveSlide($slide);
+      return swiper.slideTo(index, speed, runCallbacks);
+    };
+
+    function _initialize() {
+      swiper = new Swiper($ele, settings);
+      swiper.on('click', function(swiper, event) {
+        var self = this,
+          index = swiper.clickedIndex,
+          $slide = $(swiper.clickedSlide),
+          data = $slide.data('slide-data') || $slide.text();
+
+        _setCurrentActiveSlide($slide);
+        $.each(onSlideClickCallback, function(idx, func) {
+          if (typeof(func) === 'function') {
+            func.apply(self, [swiper, event, data, index]);
+          }
+        });
+      });
+    }
+
+    function _setCurrentActiveSlide($slide) {
+      $('.swiper-navbar-slide-active', $ele).removeClass('swiper-navbar-slide-active');
+      $('.swiper-navbar-slide', $slide).addClass('swiper-navbar-slide-active');
+    }
+
+  }
+  </script>
+</element>

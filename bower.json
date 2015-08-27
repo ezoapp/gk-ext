@@ -16,7 +16,8 @@
         "jquery.gk": "master",
         "jquery.qrcode": "master",
         "jquery-simpleweather": "master",
-        "jquery-validation": "1.13.0"
+        "jquery-validation": "1.13.0",
+        "swiper": "3.1.2"
     },
     "devDependencies": {
         "gk-loader": "master"

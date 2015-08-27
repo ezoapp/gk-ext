@@ -1,0 +1,23 @@
+.swiper-navbar-slide {
+  background-color: #f6f6f6;
+  border-color: #ddd;
+  border-style: solid;
+  border-width: 1px;
+  border-right-width: 0px;
+  cursor: pointer;
+  line-height: 1.8;
+  text-align: center;
+}
+
+.swiper-slide .swiper-navbar-slide.swiper-navbar-slide-active {
+  background-color: #38c;
+  color: #fff;
+}
+
+.swiper-navbar-slide:hover {
+  background-color: #ededed;
+}
+
+.swiper-slide:last-child .swiper-navbar-slide {
+  border-right-width: 1px;
+}
