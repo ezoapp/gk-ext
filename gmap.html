@@ -10,7 +10,8 @@
 
   <script>
 
-    var DEFAULT_LOC = '22.604880,120.301818';
+    var DEFAULT_LOC = '22.604880,120.301818', 
+        LAT_LNG_PATTERN = /^(\d+\.?\d*)(\s*[,\s]\s*)(\d+\.?\d*)$/;
 
     window.gmapReady = {
       js: function () {
@@ -62,7 +63,7 @@
             $page = $ele.closest('[data-role="page"]');
         if ($.trim(location)) {
           if (self.isReady) {
-            if (location.match(/^(\d+\.?\d*)(\s*[,\s]\s*)(\d+\.?\d*)$/)) {
+            if (location.match(LAT_LNG_PATTERN)) {
               self.options['center'] = new google.maps.LatLng(parseFloat(RegExp.$1, 10), parseFloat(RegExp.$3, 10));
               setMap();
             } else {
@@ -120,13 +121,28 @@
       },
 
       geocode: function (addr, callback) {
-        this.Geocoder = (this.Geocoder) || new google.maps.Geocoder();
-        this.Geocoder.geocode({
+        var self = this;
+        (typeof self.geodata === 'object') || (self.geodata = {});
+        if (typeof self.geodata[addr] === 'object') {
+          callback(self.geodata[addr]);
+          return;
+        }
+
+        self.Geocoder = (self.Geocoder) || new google.maps.Geocoder();
+        self.Geocoder.geocode({
               address: addr
             },
             function (result, status) {
               if (status === google.maps.GeocoderStatus.OK) {
+                self.geodata[addr] = result;
                 callback(result);
+              }
+              if (status === google.maps.GeocoderStatus.OVER_QUERY_LIMIT) {
+                var delay = Math.floor((Math.random() * 100) + 1) * 100;
+                console.log('#' + self.id + ' retry google map geocoder after ' + delay + ' ms...');
+                setTimeout(function () {
+                  self.geocode(addr, callback);
+                }, delay);
               }
             }
         );
@@ -163,7 +179,7 @@
         (typeof self.markers === 'object') || (self.markers = {});
         if ($.trim(location) && (!self.markers[location] || !self.markers[location].map)) {
           if (self.gmap) {
-            if (location.match(/^(\d+\.?\d*)(\s*[,\s]\s*)(\d+\.?\d*)$/)) {
+            if (location.match(LAT_LNG_PATTERN)) {
               setMarker(new google.maps.LatLng(parseFloat(RegExp.$1, 10), parseFloat(RegExp.$3, 10)));
             } else {
               self.geocode(location, function (result) {
