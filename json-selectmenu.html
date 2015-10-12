@@ -18,7 +18,6 @@
             $ele = this.$ele,
             $page = $ele.closest('[data-role="page"]'),
             isInited = false;
-        $ele.html(self.$originEle.html());
         $ele.on("selectmenucreate", function (event, ui) {
           if ($ele.attr('disable') == 'true') {
             $ele.selectmenu("disable");
@@ -68,7 +67,7 @@
         var self = this,
             $ele = self.$ele,
             template = self.$originEle.html();
-        $ele.children().remove();
+        $ele.empty();
         $(model).each(function (idx, obj) {
           var tmp = template;
           for (var key in obj) {
@@ -92,13 +91,21 @@
           return $ele.attr('service');
         }
       },
-      
-      load: function (service) {
+
+      load: function (service, callback) {
         var self = this,
-            url = (self.service(service)) ? self.service() : service;
-        $.getJSON(url).complete(function (data) {
-          self.model($.parseJSON(data.responseText));
-        });
+            $ele = self.$ele,
+            url = (service) ? service : self.service();
+        ($.isFunction(callback)) || (callback = $.noop);
+        if (url) {
+          $ele.selectmenu('disable');
+          $.getJSON(url).complete(function (data) {
+            self.model($.parseJSON(data.responseText));
+            callback();
+          }).always(function () {
+            $ele.selectmenu('enable');
+          });
+        }
       },
 
       onChange: function (callback) {
