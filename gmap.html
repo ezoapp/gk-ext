@@ -119,28 +119,36 @@
         return this.location(addr);
       },
 
-      geocode: function (addr, callback) {
+      geocode: function (location, callback) {
         var self = this;
         (typeof self.geodata === 'object') || (self.geodata = {});
-        if (typeof self.geodata[addr] === 'object') {
-          callback(self.geodata[addr]);
+        if (typeof self.geodata[location] === 'object') {
+          callback(self.geodata[location]);
           return;
         }
-
+        
         self.Geocoder = (self.Geocoder) || new google.maps.Geocoder();
-        self.Geocoder.geocode({
-              address: addr
-            },
+        
+        var options = (location.match(LAT_LNG_PATTERN)) ? {
+          location: {
+            lat: parseFloat(RegExp.$1, 10), 
+            lng: parseFloat(RegExp.$3, 10)
+          }
+        } : {
+          address: location
+        };
+        
+        self.Geocoder.geocode(options,
             function (result, status) {
               if (status === google.maps.GeocoderStatus.OK) {
-                self.geodata[addr] = result;
+                self.geodata[location] = result;
                 callback(result);
               }
               if (status === google.maps.GeocoderStatus.OVER_QUERY_LIMIT) {
                 var delay = Math.floor((Math.random() * 100) + 1) * 100;
                 console.log('#' + self.id + ' retry google map geocoder after ' + delay + ' ms...');
                 setTimeout(function () {
-                  self.geocode(addr, callback);
+                  self.geocode(location, callback);
                 }, delay);
               }
             }
