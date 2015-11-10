@@ -26,7 +26,6 @@
             $ele = self.$ele,
             $page = $ele.closest('[data-role="page"]'),
             api = 'http://maps.google.com/maps/api/js?' +
-                ($ele.attr('sensor') === 'true' ? 'sensor=true' : 'sensor=false') +
                 ($ele.attr('key') ? '&key=' + $ele.attr('key') : '') +
                 '&callback=gmapReady',
             initialize = function () {
@@ -95,7 +94,7 @@
               });
             }
             // bind clickCallbacks
-            if (typeof self.clickCallbacks === 'array') {
+            if ($.isArray(self.clickCallbacks)) {
               self.clickCallbacks.forEach(function (callback) {
                 self.onclick(callback);
               });
@@ -169,21 +168,16 @@
       addMarker: function (location, title, icon, visible) {
         var self = this,
             markerTitle = (title) ? title : self.markerTitle(),
-            markerIcon = (icon) ? icon : self.markerIcon(),
-            markerVisible = (typeof visible === 'boolean') ? visible : self.markerVisible(),
-            iconOption = (typeof markerIcon !== 'string') ? undefined : {
-              url: markerIcon,
-              scaledSize: new google.maps.Size(40, 40)
-            };
+            markerVisible = (typeof visible === 'boolean') ? visible : self.markerVisible();
         (typeof markerVisible !== 'boolean') && (markerVisible = true);
         (typeof self.markers === 'object') || (self.markers = {});
         if ($.trim(location) && (!self.markers[location] || !self.markers[location].map)) {
           if (self.gmap) {
             if (location.match(LAT_LNG_PATTERN)) {
-              setMarker(new google.maps.LatLng(parseFloat(RegExp.$1, 10), parseFloat(RegExp.$3, 10)));
+              setMarker(new google.maps.LatLng(parseFloat(RegExp.$1, 10), parseFloat(RegExp.$3, 10)), icon);
             } else {
               self.geocode(location, function (result) {
-                setMarker(result[0].geometry.location);
+                setMarker(result[0].geometry.location, icon);
               });
             }
           } else {
@@ -196,7 +190,12 @@
           }
         }
 
-        function setMarker(latlng) {
+        function setMarker(latlng, icon) {
+          var markerIcon = (icon) ? icon : self.markerIcon(),
+              iconOption = (typeof markerIcon !== 'string') ? markerIcon : {
+                url: markerIcon,
+                scaledSize: new google.maps.Size(40, 40)
+              };
           var marker = new google.maps.Marker({
             map: self.gmap,
             position: latlng,
@@ -204,6 +203,13 @@
             visible: markerVisible,
             icon: iconOption
           });
+          if (markerTitle) {
+            marker.addListener('click', function() {
+              new google.maps.InfoWindow({
+                content: markerTitle
+              }).open(self.gmap, marker);
+            });            
+          }
           self.markers[location] = marker;
           return marker;
         }
@@ -211,9 +217,10 @@
 
       removeMarker: function (location) {
         var self = this;
+        (typeof self.markers === 'object') || (self.markers = {});
         if (location) {
           var marker = self.markers[location];
-          if (marker) {
+          if (marker && marker.setMap) {
             marker.setMap(null);
           }
           delete self.markers[location];
@@ -284,7 +291,7 @@
               });
             });
           } else {
-            (typeof self.clickCallbacks === 'array') || (self.clickCallbacks = []);
+            ($.isArray(self.clickCallbacks)) || (self.clickCallbacks = []);
             self.clickCallbacks.push(callback);
           }
         }
