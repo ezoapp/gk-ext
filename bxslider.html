@@ -3,10 +3,10 @@
 <element name='bxslider'>
 
   <template>
-    <link rel="stylesheet" href="../bxSlider/dist/jquery.bxslider.css" />
+    <link rel="stylesheet" href="../bxSlider/dist/jquery.bxslider.min.css" />
     <link rel="stylesheet" href="bxslider/cssreset.css" />
     <div id='{{id}}' style='{{style}}'>
-      <ul style='{{style}}' captions='{{captions}}' class='bxslider'>
+      <ul style='{{style}}' class='bxslider'>
         <content></content>
       </ul>
     </div>
@@ -20,6 +20,8 @@
   registerElement('bxslider', {
 
     bxSlider: null,
+
+    bxOptions: null,
 
     init: function() {
       var self = this,
@@ -43,20 +45,31 @@
 
     hideSlider_: function() {
       if (this.bxSlider === null) {
-        var $slider = this.$ele.find('.bxslider');
+        var $slider = this.$ele.children('ul.bxslider');
         if ($slider.length) {
-          $slider.css('visibility', 'hidden');
+          this.$ele.css('visibility', 'hidden');
         }
       }
     },
 
     showSlider_: function() {
       if (this.bxSlider === null) {
-        var $slider = this.$ele.find('.bxslider');
+        var $slider = this.$ele.children('ul.bxslider');
         if ($slider.length) {
-          this.bxSlider = $slider.bxSlider();
-          $slider.css('visibility', 'visible');
+          this.bxSlider = $slider.bxSlider(this.bxOptions);
+          this.$ele.css('visibility', 'visible');
         }
+      }
+    },
+
+    options: function(opts) {
+      if ($.isPlainObject(opts)) {
+        this.bxOptions = opts;
+        if (this.bxSlider) {
+          this.bxSlider.reloadSlider(opts);
+        }
+      } else {
+        return this.bxOptions;
       }
     }
 

@@ -10,7 +10,7 @@
     "homepage": "http://www.ezoui.com/",
     "dependencies": {
         "split-pane": "https://github.com/shagstrom/split-pane.git#master",
-        "bxSlider": "stevenwanderski/bxslider-4#77a1db0",
+        "bxSlider": "stevenwanderski/bxslider-4#fd0b8d4",
         "flippant": "https://github.com/mintchaos/flippant.js.git#master",
         "raty": "master",
         "jquery.gk": "master",
