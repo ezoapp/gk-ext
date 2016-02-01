@@ -28,7 +28,9 @@
       url = $ele.attr('url'),
       options, offset = 0,
       currentSize = 0,
-      totalSize = 0;
+      totalSize = 0,
+      $page = $ele.closest('[data-role="page"]'),
+      fetchCallback;
 
     this.init = self.init = function() {
       var $window = $(window),
@@ -65,13 +67,25 @@
       });
 
       if (url) {
-        _getNextPage(true);
+        if ($page.length) {
+          $page.one('pageshow', function() {
+            _getNextPage(true);
+          });
+        } else {
+          _getNextPage(true);
+        }
       }
     };
 
     self.onRow = function(callback) {
       if (callback && typeof(callback) === 'function') {
         rowCallback = callback;
+      }
+    };
+
+    self.onFetch = function(callback) {
+      if (callback && typeof(callback) === 'function') {
+        fetchCallback = callback;
       }
     };
 
@@ -110,6 +124,9 @@
         currentSize += data.length;
         offset += pageSize;
         _model(data, clear);
+        if (fetchCallback) {
+          fetchCallback.apply(self, [info]);
+        }
       }).always(function() {
         _unmask();
       });
