@@ -191,8 +191,8 @@
         data = {
           offset: offset,
           pageSize: pageSize,
-          options: options && encodeURIComponent(JSON.stringify(options))
         };
+        $.extend(true, data, options);
       }
 
       var ajax = $.gk.ajax || $.ajax;
