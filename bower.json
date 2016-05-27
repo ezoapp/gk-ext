@@ -14,7 +14,7 @@
         "flippant": "https://github.com/mintchaos/flippant.js.git#master",
         "raty": "master",
         "jquery.gk": "master",
-        "jquery.qrcode": "master",
+        "jquery.qrcode": "0.11.0",
         "jquery-simpleweather": "master",
         "jquery-validation": "1.13.0",
         "swiper": "3.1.2"
