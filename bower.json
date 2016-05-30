@@ -9,13 +9,13 @@
     "license": "MIT",
     "homepage": "http://www.ezoui.com/",
     "dependencies": {
-        "split-pane": "https://github.com/shagstrom/split-pane.git#master",
+        "split-pane": "0.4.0",
         "bxSlider": "stevenwanderski/bxslider-4#fd0b8d4",
-        "flippant": "https://github.com/mintchaos/flippant.js.git#master",
-        "raty": "master",
+        "flippant.js": "*",
+        "raty": "2.7.0",
         "jquery.gk": "master",
         "jquery.qrcode": "0.11.0",
-        "jquery-simpleweather": "master",
+        "jquery-simpleweather": "3.0.2",
         "jquery-validation": "1.13.0",
         "swiper": "3.1.2"
     },
