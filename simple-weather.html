@@ -80,22 +80,27 @@
     },
 
     geolocation: function(value) {
+      var self = this;
       return value === undefined ? self.options['geolocation'] : self.options['geolocation'] = value + '';
     },
 
     location: function(value) {
+      var self = this;
       return value === undefined ? self.options['location'] : self.options['location'] = value;
     },
 
     unit: function(value) {
+      var self = this;
       return value === undefined ? self.options['unit'] : self.options['unit'] = value;
     },
 
     data: function() {
+      var self = this;
       return self.data;
     },
 
     autoupdate: function(milliseconds) {
+      var self = this;
       var ms = parseInt(milliseconds);
       if (ms === 0) {
         !self.__interval || clearInterval(self.__interval);
@@ -105,6 +110,7 @@
     },
 
     refresh: function(failure) {
+      var self = this;
       if (typeof failure === 'function') {
         self.fail = failure;
       }
