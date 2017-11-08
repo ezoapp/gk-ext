@@ -9,119 +9,114 @@
   </template>
 
   <script>
-  function template(txt) {
-    return new Function("obj", "var p=[];(function(){p.push('" +
-      txt.replace(/[\r\t]/g, " ")
-      .replace(/[\n]/g, "\\n")
-      .split("{{").join("\t")
-      .replace(/((^|\}\})[^\t]*)'/g, "$1\r")
-      // escape other single quotes
-      .split("'").join("\\'")
-      .replace(/\t(.*?)\}\}/g, "',this.$1,'")
-      .split("\t").join("');")
-      .split("}}").join("p.push('")
-      .split("\r").join("\\'") + "');}).call(obj); return p.join('');");
-  }
-
-  function getWeather(options, success, fail) {
-    try {
-      var getData = function() {
-        $.simpleWeather({
-          // woeid: options['woeid'],
-          location: options['location'],
-          unit: options['unit'],
-          success: success,
-          error: fail
-        });
-      };
-
-      if (options['geolocation'] === 'true') {
-        navigator.geolocation.getCurrentPosition(function(position) {
-          //Set location using your lat/lng coordinates
-          options['location'] = position.coords.latitude + ',' + position.coords.longitude;
-          getData();
-        }, fail);
-      } else {
-        getData();
-      }
-    } catch (e) {
-
-    }
-  }
-
   registerElement('simple-weather', {
     init: function() {
-      var self = this;
-      self.options = {};
-      self.options.woeid = '';
-      self.options['geolocation'] = self.$ele.attr('geolocation') || 'true';
-      self.options['location'] = self.$ele.attr('location') || '';
-      self.options['unit'] = self.$ele.attr('unit') || 'c';
-      self.options['autoupdate'] = self.$ele.attr('autoupdate') || 0;
-      self.tmpl = self.$originEle.html();
-      self.__interval = {};
-
-      self.fail = function(error) {
-        self.autoupdate(0);
-        self.$ele.html(JSON.stringify(error));
-      };
-
-      self.$ele.css('visibility', 'hidden');
-      getWeather(self.options, function(data) {
-        var tmpl = template(self.tmpl);
-        self.data = data;
-        self.$ele.html(tmpl(data));
-        self.$ele.css('visibility', 'visible');
-        self.autoupdate(self.options['autoupdate']);
-      }, function(error) {
-        self.fail();
-        self.$ele.css('visibility', 'visible');
-      });
-    },
-
-    geolocation: function(value) {
-      var self = this;
-      return value === undefined ? self.options['geolocation'] : self.options['geolocation'] = value + '';
-    },
-
-    location: function(value) {
-      var self = this;
-      return value === undefined ? self.options['location'] : self.options['location'] = value;
-    },
-
-    unit: function(value) {
-      var self = this;
-      return value === undefined ? self.options['unit'] : self.options['unit'] = value;
-    },
-
-    data: function() {
-      var self = this;
-      return self.data;
-    },
-
-    autoupdate: function(milliseconds) {
-      var self = this;
-      var ms = parseInt(milliseconds);
-      if (ms === 0) {
-        !self.__interval || clearInterval(self.__interval);
-      } else if (ms) {
-        self.__interval = setInterval(self.refresh, ms);
-      }
-    },
-
-    refresh: function(failure) {
-      var self = this;
-      if (typeof failure === 'function') {
-        self.fail = failure;
-      }
-
-      getWeather(self.options, function(data) {
-        var tmpl = template(self.tmpl);
-        self.data = data;
-        self.$ele.html(tmpl(data));
-      }, self.fail);
+      var weather = new simpleWeather(this);
+      weather.init();
     }
   });
+
+  function simpleWeather(instance) {
+    'use strict';
+    
+    var self = instance,
+      $ele = self.$ele,
+      woeid = '',
+      geolocation = $ele.attr('geolocation') || 'true',
+      location = $ele.attr('location') || '',
+      unit = $ele.attr('unit') || 'c',
+      autoupdate = $ele.attr('autoupdate') || 0,
+      tmpl = template(self.$originEle.html()),
+      weatherData, __interval,
+      success = function(data) {
+        weatherData = data;
+        $ele.html(tmpl(weatherData));
+      },
+      fail = function(error) {
+        self.autoupdate(0);
+        $ele.html(JSON.stringify(error));
+      };
+
+    this.init = self.init = function() {
+      $ele.css('visibility', 'hidden');
+      getWeather(function(data) {
+        success(data);
+        $ele.css('visibility', 'visible');
+        self.autoupdate(autoupdate);
+      }, function(error) {
+        fail(error);
+        $ele.css('visibility', 'visible');
+      });
+    };
+
+    self.geolocation = function(value) {
+      return value === undefined ? geolocation : geolocation = value + '';
+    };
+
+    self.location = function(value) {
+      return value === undefined ? location : location = value;
+    };
+
+    self.unit = function(value) {
+      return value === undefined ? unit : unit = value;
+    };
+
+    self.data = function() {
+      return weatherData;
+    }
+
+    self.autoupdate = function(milliseconds) {
+      var ms = parseInt(milliseconds);
+      if (__interval) {
+        clearInterval(__interval);
+      }
+      if (ms === 0) {
+        clearInterval(__interval);
+      } else if (ms) {
+        __interval = setInterval(self.refresh, ms);
+      }
+    };
+
+    self.refresh = function(failure) {
+      if (typeof failure === 'function') {
+        fail = failure;
+      }
+      getWeather(success, fail);
+    };
+
+    function template(txt) {
+      return new Function("obj", "var p=[];(function(){p.push('" +
+        txt.replace(/[\r\t]/g, " ")
+        .replace(/[\n]/g, "\\n")
+        .split("{{").join("\t")
+        .replace(/((^|\}\})[^\t]*)'/g, "$1\r")
+        // escape other single quotes
+        .split("'").join("\\'")
+        .replace(/\t(.*?)\}\}/g, "',this.$1,'")
+        .split("\t").join("');")
+        .split("}}").join("p.push('")
+        .split("\r").join("\\'") + "');}).call(obj); return p.join('');");
+    }
+
+    function getWeather(success, fail) {
+      var options = {
+        location: location,
+        unit: unit,
+        success: success,
+        error: fail
+      };
+      if (geolocation === 'true') {
+        // Set location using your lat/lng coordinates
+        navigator.geolocation.getCurrentPosition(function(position) {
+          options.location = location = position.coords.latitude + ',' + position.coords.longitude;
+          $.simpleWeather(options);
+        }, fail);
+      } else {
+        $.simpleWeather(options);
+      }
+    }
+
+  }
   </script>
 
 </element>
